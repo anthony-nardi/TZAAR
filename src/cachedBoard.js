@@ -57,7 +57,6 @@ function getInitialGridState() {
 
 function getImageData() {
   const context = getContext();
-
   return context.getImageData(
     OFFSET_X,
     0,
@@ -66,31 +65,21 @@ function getImageData() {
   );
 }
 
-function drawCachedBoard() {
+export function drawCachedBoard() {
   const context = GAME_STATE_BOARD_CANVAS.getContext("2d");
   const imageData = getImageData();
-  context.putImageData(imageData, 0, 0);
+  context.putImageData(
+    imageData,
+    window.innerWidth / 2 - 4 * TRIANGLE_SIDE_LENGTH,
+    window.innerHeight / 2 - 4 * TRIANGLE_HEIGHT
+  );
 }
 
 export function drawInitialGrid() {
   initCanvas();
-  const context = getContext();
-
-  const startX = 4 * TRIANGLE_SIDE_LENGTH + (TRIANGLE_SIDE_LENGTH / 2) * 4;
-  const startY = 4 * TRIANGLE_HEIGHT;
-  context.save();
-
-  // context.translate(startX, startY);
-  // context.rotate((30 * Math.PI) / 180);
-  // context.translate(-startX, -startY);
-  // context.translate(window.innerWidth / 2 - startX, 0);
-
   grid.map(renderTriangleFromVertex);
   renderHexagonBorder();
   renderInnerHexagonBorder();
-  DEBUG && renderSquareBorder();
-
-  context.restore();
   drawCachedBoard();
 }
 
@@ -102,7 +91,6 @@ function renderTriangleFromVertex(coordinate) {
   }
   const [x, y] = coordinate.split(",");
 
-  // const offsetX = y % 2 !== 0 ? TRIANGLE_SIDE_LENGTH / 2 : 0;
   const offsetX = (y * TRIANGLE_SIDE_LENGTH) / 2;
 
   const startX = x * TRIANGLE_SIDE_LENGTH + offsetX;
@@ -110,7 +98,6 @@ function renderTriangleFromVertex(coordinate) {
 
   context.beginPath();
   context.moveTo(startX, startY);
-  // DEBUG && context.fillText(coordinate, startX + 10, startY + 10);
   context.lineTo(startX + TRIANGLE_SIDE_LENGTH, startY);
   context.lineTo(startX + TRIANGLE_SIDE_LENGTH / 2, startY + TRIANGLE_HEIGHT);
   context.lineTo(startX, startY);

@@ -1,13 +1,18 @@
+import { Record } from "immutable";
+
 export const DEBUG = true;
 export const NUMBER_OF_ROWS = 8;
 export const NUMBER_OF_COLS = 8;
-export const TRIANGLE_SIDE_LENGTH = 60;
+export const TRIANGLE_SIDE_LENGTH = window.innerHeight / (NUMBER_OF_COLS + 2.5);
 export const TRIANGLE_HEIGHT = TRIANGLE_SIDE_LENGTH * (Math.sqrt(3) / 2);
 export const CACHED_CANVAS = document.createElement("canvas");
 export const GAME_STATE_BOARD_CANVAS = document.getElementById(
   "gameStateBoard"
 );
 
+export const NUMBER_OF_TOTTS = 15;
+export const NUMBER_OF_TZARRAS = 9;
+export const NUMBER_OF_TZAARS = 6;
 export const PLAYABLE_VERTICES = [
   "4,0",
   "5,0",
@@ -63,5 +68,21 @@ export const PLAYABLE_VERTICES = [
   "2,7",
   "3,7",
   "4,7",
-  "5,7"
+  "5,7",
+  "0,8",
+  "1,8",
+  "2,8",
+  "3,8",
+  "4,8"
 ];
+
+export const TZAAR = "TZAAR";
+export const TOTT = "TOTT";
+export const TZARRA = "TZARRA";
+
+export const GamePieceRecord = Record({
+  ownedBy: "",
+  type: "",
+  stackSize: 1,
+  isDragging: false
+});
