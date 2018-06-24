@@ -1,10 +1,7 @@
-import { drawInitialGrid } from "./cachedBoard";
-import { drawCoordinates, setupBoardWithPieces } from "./gameLogic";
+import { initGame } from "./gameLogic";
 
 function startApp() {
-  drawInitialGrid();
-  drawCoordinates();
-  setupBoardWithPieces();
+  initGame();
 }
 
 window.addEventListener("DOMContentLoaded", startApp, false);
