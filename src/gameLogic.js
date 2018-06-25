@@ -12,7 +12,10 @@ import {
   TZARRA,
   NUMBER_OF_TOTTS,
   NUMBER_OF_TZARRAS,
-  NUMBER_OF_TZAARS
+  NUMBER_OF_TZAARS,
+  PLAYER_ONE,
+  PLAYER_TWO,
+  TURN_PHASES
 } from "./constants";
 import { drawCachedBoard, drawInitialGrid } from "./cachedBoard";
 import {
@@ -27,9 +30,12 @@ import { getBoardCoordinatesFromPixelCoordinates } from "./gameBoardHelpers";
 import { List, Map } from "immutable";
 import {
   movingPiece,
-  gamePiecesState,
-  setNewGamePiecesState,
-  setMovingPiece
+  gameBoardState,
+  setNewgameBoardState,
+  setMovingPiece,
+  nextPhase,
+  currentTurn,
+  turnPhase
 } from "./gameState";
 
 let PLAYER_ONE_PIECES = List();
@@ -67,7 +73,7 @@ export function setupBoardWithPieces() {
   const shuffledPieces = allGamePieces.sortBy(Math.random);
 
   shuffledPieces.forEach((piece, index) => {
-    setNewGamePiecesState(gamePiecesState.set(PLAYABLE_VERTICES[index], piece));
+    setNewgameBoardState(gameBoardState.set(PLAYABLE_VERTICES[index], piece));
   });
 
   drawGameBoardState();
@@ -76,11 +82,11 @@ export function setupBoardWithPieces() {
 function handleClickPiece({ x, y }) {
   const key = getBoardCoordinatesFromPixelCoordinates(x, y);
 
-  if (!gamePiecesState.get(key)) {
+  if (!gameBoardState.get(key)) {
     return;
   }
 
-  setNewGamePiecesState(gamePiecesState.setIn([key, "isDragging"], true));
+  setNewgameBoardState(gameBoardState.setIn([key, "isDragging"], true));
 
   setMovingPiece(key);
 }
@@ -93,17 +99,159 @@ function handleMovePiece({ x, y }) {
   drawCachedBoard();
   drawGamePieces();
   drawCoordinates();
-  drawGamePiece(gamePiecesState.get(movingPiece), x, y);
+  drawGamePiece(gameBoardState.get(movingPiece), x, y);
 }
 
-function handleDropPiece() {
+function handleDropPiece({ x, y }) {
+  const toPiece = getBoardCoordinatesFromPixelCoordinates(x, y);
+  setNewgameBoardState(
+    gameBoardState.setIn([movingPiece, "isDragging"], false)
+  );
+
+  if (turnPhase === TURN_PHASES.CAPTURE && canCapture(movingPiece, toPiece)) {
+    const validCaptures = getValidMoves(movingPiece);
+
+    if (validCaptures.includes(toPiece)) {
+      const pieceToMove = gameBoardState.get(movingPiece);
+      setNewgameBoardState(
+        gameBoardState.set(movingPiece, false).set(toPiece, pieceToMove)
+      );
+      nextPhase();
+    }
+  }
+
   setMovingPiece(null);
+  clearCanvas();
+  drawCachedBoard();
+  drawGamePieces();
+  drawCoordinates();
 }
 
 export function initGame() {
   drawInitialGrid();
   drawCoordinates();
   setupBoardWithPieces();
+}
+
+function goWest(coordinate) {
+  let [x, y] = coordinate.split(",");
+  x = Number(x);
+  y = Number(y);
+
+  return `${x - 1},${y}`;
+}
+
+function goEast(coordinate) {
+  let [x, y] = coordinate.split(",");
+
+  x = Number(x);
+  y = Number(y);
+
+  return `${x + 1},${y}`;
+}
+
+function goNorthWest(coordinate) {
+  let [x, y] = coordinate.split(",");
+
+  x = Number(x);
+  y = Number(y);
+
+  return `${x},${y - 1}`;
+}
+
+function goNorthEast(coordinate) {
+  let [x, y] = coordinate.split(",");
+  x = Number(x);
+  y = Number(y);
+
+  return `${x + 1},${y - 1}`;
+}
+
+function goSouthWest(coordinate) {
+  let [x, y] = coordinate.split(",");
+
+  x = Number(x);
+  y = Number(y);
+
+  return `${x - 1},${y + 1}`;
+}
+
+function goSouthEast(coordinate) {
+  let [x, y] = coordinate.split(",");
+  x = Number(x);
+  y = Number(y);
+
+  return `${x},${y + 1}`;
+}
+
+function isPlayableSpace(coordinate) {
+  return PLAYABLE_VERTICES.includes(coordinate);
+}
+
+function canCapture(fromCoordinate, toCoordinate) {
+  const fromPiece = gameBoardState.get(fromCoordinate);
+  const toPiece = gameBoardState.get(toCoordinate);
+
+  return (
+    fromPiece.ownedBy !== toPiece.ownedBy &&
+    fromPiece.stackSize >= toPiece.stackSize
+  );
+}
+
+function isValidEmptyCoordinate(coordinate) {
+  return Boolean(
+    PLAYABLE_VERTICES.includes(coordinate) && !gameBoardState.get(coordinate)
+  );
+}
+
+const nextPiece = {
+  w: goWest,
+  e: goEast,
+  nw: goNorthWest,
+  ne: goNorthEast,
+  sw: goSouthWest,
+  se: goSouthEast
+};
+
+function getNextValidCapture(fromCoordinate, direction) {
+  let nextMove;
+  let coordinateToCheck = fromCoordinate;
+  while (nextMove === undefined) {
+    coordinateToCheck = nextPiece[direction](coordinateToCheck);
+
+    // Not a space that we can play on
+    if (!isPlayableSpace(coordinateToCheck)) {
+      nextMove = false;
+    }
+
+    // This space is empty so we can continue
+    else if (isValidEmptyCoordinate(coordinateToCheck)) {
+      nextMove = undefined;
+    }
+
+    // First piece we encounter can't be captured
+    else if (!canCapture(fromCoordinate, coordinateToCheck)) {
+      nextMove = false;
+    }
+    // Finally a piece we can capture
+    else {
+      nextMove = coordinateToCheck;
+    }
+  }
+  return nextMove;
+}
+
+function getValidMoves(fromCoordinate) {
+  if (turnPhase === TURN_PHASES.CAPTURE) {
+    return List([
+      getNextValidCapture(fromCoordinate, "w"),
+      getNextValidCapture(fromCoordinate, "e"),
+      getNextValidCapture(fromCoordinate, "nw"),
+      getNextValidCapture(fromCoordinate, "ne"),
+      getNextValidCapture(fromCoordinate, "sw"),
+      getNextValidCapture(fromCoordinate, "se")
+    ]).filter(isValidMove => isValidMove);
+  }
 }
 
 GAME_STATE_BOARD_CANVAS.addEventListener("mousedown", handleClickPiece);

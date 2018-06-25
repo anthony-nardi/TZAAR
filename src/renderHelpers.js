@@ -19,7 +19,7 @@ import {
   NUMBER_OF_TZAARS
 } from "./constants";
 import { drawCachedBoard } from "./cachedBoard";
-import { movingPiece, gamePiecesState } from "./gameState";
+import { movingPiece, gameBoardState } from "./gameState";
 
 function getContext() {
   return GAME_STATE_BOARD_CANVAS.getContext("2d");
@@ -58,7 +58,7 @@ export function drawStaticGamePiece(gamePiece, coordinate) {
     coordinate
   ).split(",");
 
-  if (gamePiece.isDragging) {
+  if (gamePiece.isDragging || !gamePiece) {
     return;
   }
 
@@ -94,7 +94,7 @@ export function drawGamePiece(gamePiece, xPos, yPos) {
 }
 
 export function drawGamePieces() {
-  gamePiecesState.forEach(drawStaticGamePiece);
+  gameBoardState.forEach(drawStaticGamePiece);
 }
 
 export function clearCanvas() {

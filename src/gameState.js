@@ -1,12 +1,55 @@
 import { List, Map } from "immutable";
+import { PLAYER_ONE, PLAYER_TWO, TURN_PHASES } from "./constants";
 
 export let movingPiece = null;
-export let gamePiecesState = Map();
+export let gameBoardState = Map();
+export let isVeryFirstTurn = true;
+export let currentTurn = PLAYER_ONE;
+export let turnPhase = TURN_PHASES.CAPTURE;
 
-export function setNewGamePiecesState(newState) {
-  gamePiecesState = newState;
+export function setNewgameBoardState(newState) {
+  gameBoardState = newState;
 }
 
 export function setMovingPiece(coordinate) {
   movingPiece = coordinate;
+}
+
+export function nextPhase() {
+  // first turn of the game is special
+  if (isVeryFirstTurn) {
+    isVeryFirstTurn = false;
+    turnPhase = TURN_PHASES.CAPTURE;
+    currentTurn = PLAYER_TWO;
+    return;
+  }
+
+  // players turns aren't over yet
+  if (currentTurn === PLAYER_ONE && turnPhase === TURN_PHASES.CAPTURE) {
+    turnPhase = TURN_PHASES.STACK_OR_CAPTURE;
+    return;
+  }
+  if (currentTurn === PLAYER_TWO && turnPhase === TURN_PHASES.CAPTURE) {
+    turnPhase = TURN_PHASES.STACK_OR_CAPTURE;
+    return;
+  }
+
+  // next players turn begins
+  if (
+    currentTurn === PLAYER_ONE &&
+    turnPhase === TURN_PHASES.STACK_OR_CAPTURE
+  ) {
+    1;
+    turnPhase = TURN_PHASES.CAPTURE;
+    currentTurn = PLAYER_TWO;
+    return;
+  }
+  if (
+    currentTurn === PLAYER_TWO &&
+    turnPhase === TURN_PHASES.STACK_OR_CAPTURE
+  ) {
+    turnPhase = TURN_PHASES.CAPTURE;
+    currentTurn = PLAYER_ONE;
+    return;
+  }
 }

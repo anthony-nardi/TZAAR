@@ -86,3 +86,10 @@ export const GamePieceRecord = Record({
   stackSize: 1,
   isDragging: false
 });
+
+export const PLAYER_ONE = "PLAYER_ONE";
+export const PLAYER_TWO = "PLAYER_TWO";
+export const TURN_PHASES = {
+  CAPTURE: "CAPTURE",
+  STACK_OR_CAPTURE: "STACK_OR_CAPTURE"
+};
