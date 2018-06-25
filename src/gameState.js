@@ -21,16 +21,22 @@ export function nextPhase() {
     isVeryFirstTurn = false;
     turnPhase = TURN_PHASES.CAPTURE;
     currentTurn = PLAYER_TWO;
+
+    document.getElementById("phase").innerHTML = "CAPTURE";
+    document.getElementById("turn").innerHTML = "AI";
+
     return;
   }
 
   // players turns aren't over yet
   if (currentTurn === PLAYER_ONE && turnPhase === TURN_PHASES.CAPTURE) {
     turnPhase = TURN_PHASES.STACK_OR_CAPTURE;
+    document.getElementById("phase").innerHTML = "STACK OR CAPTURE";
     return;
   }
   if (currentTurn === PLAYER_TWO && turnPhase === TURN_PHASES.CAPTURE) {
     turnPhase = TURN_PHASES.STACK_OR_CAPTURE;
+    document.getElementById("phase").innerHTML = "STACK OR CAPTURE";
     return;
   }
 
@@ -39,9 +45,10 @@ export function nextPhase() {
     currentTurn === PLAYER_ONE &&
     turnPhase === TURN_PHASES.STACK_OR_CAPTURE
   ) {
-    1;
     turnPhase = TURN_PHASES.CAPTURE;
     currentTurn = PLAYER_TWO;
+    document.getElementById("phase").innerHTML = "CAPTURE";
+    document.getElementById("turn").innerHTML = "AI";
     return;
   }
   if (
@@ -50,6 +57,8 @@ export function nextPhase() {
   ) {
     turnPhase = TURN_PHASES.CAPTURE;
     currentTurn = PLAYER_ONE;
+    document.getElementById("phase").innerHTML = "CAPTURE";
+    document.getElementById("turn").innerHTML = "PLAYER";
     return;
   }
 }

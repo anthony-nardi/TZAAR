@@ -29,10 +29,23 @@
       border-radius: 4px;
       margin-top: 8px;
       margin-bottom: 8px;
+      cursor: pointer;
     }
 
     .hidden {
       display: none
+    }
+
+    #gameState {
+      position: absolute;
+      top: 32px;
+      left: 32px;
+    }
+
+    .flex {
+      display: flex;
+      width: 140px;
+      justify-content: space-between
     }
   </style>
 </head>
@@ -40,6 +53,20 @@
 <body style="margin:0;padding:0">
   <canvas id="gameStateBoard" class="hidden"></canvas>
   <script src="main.js"></script>
+
+  <div id="gameState" class="hidden">
+    <div class="flex">
+
+      <b>Turn: </b>
+      <div id="turn">PLAYER</div>
+    </div>
+    <div class="flex">
+      <b>Phase: </b>
+      <div id="phase">CAPTURE</div>
+    </div>
+
+  </div>
+
   <div class="mainContainer" id="gameMenu">
     <div class="titleContainer">
       <h1>TZAAR</h1>
@@ -51,7 +78,11 @@
     </div>
   </div>
   <div id="rules" class="hidden mainContainer">
+    <div class="buttonContainer">
+      <div class="button" id="backToGameMenu">Back</div>
+    </div>
     <div class=" titleContainer ">
+
       <h1>Rules</h1>
 
     </div>
@@ -69,8 +100,8 @@
       <h4>GAMEPLAY</h4>
       <p>With the exception of the very first move of the game, each turn will consist of two phases.</p>
       <p>Phase 1: Capture</p>
-      <p>The current player must take one of their pieces and capture a piece of the other player. Pieces move along the edges
-        that make up the board. The capturing piece must be stacked equal to or higher that capturee.</p>
+      <p>The current player must take one of their pieces and capture a piece of the other player. Pieces move along the lines
+        that make up the board. The capturing piece must be stacked equal to or higher than the piece to be captured.</p>
       <p>Phase 2: Stack or Capture</p>
       <p>During phase two, the current player has the option of either capturing another piece using the same rules as above
         or stacking one of their pieces. To stack a piece, move the piece you wish to put on top of another one of the pieces
