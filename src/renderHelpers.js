@@ -26,6 +26,9 @@ function getContext() {
 }
 
 export function drawCoordinates() {
+  if (!DEBUG) {
+    return;
+  }
   PLAYABLE_VERTICES.map(drawCoordinate);
 }
 
@@ -90,6 +93,13 @@ export function drawGamePiece(gamePiece, xPos, yPos) {
     context.beginPath();
     context.arc(xPos, yPos, TRIANGLE_HEIGHT / 5, 0, 2 * Math.PI);
     context.stroke();
+  }
+
+  if (gamePiece.stackSize) {
+    context.font = "12px Verdana";
+    context.fillStyle = gamePiece.type === TZAAR ? "#000" : "#fff";
+
+    context.fillText(gamePiece.stackSize, +xPos - 4, +yPos + 4);
   }
 }
 

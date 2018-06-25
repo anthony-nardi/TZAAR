@@ -1,6 +1,6 @@
 import { Record } from "immutable";
 
-export const DEBUG = true;
+export const DEBUG = false;
 export const NUMBER_OF_ROWS = 8;
 export const NUMBER_OF_COLS = 8;
 export const TRIANGLE_SIDE_LENGTH = window.innerHeight / (NUMBER_OF_COLS + 2.5);

@@ -86,6 +86,10 @@ function handleClickPiece({ x, y }) {
     return;
   }
 
+  if (gameBoardState.getIn([key, "ownedBy"]) !== currentTurn) {
+    return;
+  }
+
   setNewgameBoardState(gameBoardState.setIn([key, "isDragging"], true));
 
   setMovingPiece(key);
@@ -103,18 +107,54 @@ function handleMovePiece({ x, y }) {
 }
 
 function handleDropPiece({ x, y }) {
+  if (!movingPiece) {
+    return;
+  }
   const toPiece = getBoardCoordinatesFromPixelCoordinates(x, y);
   setNewgameBoardState(
     gameBoardState.setIn([movingPiece, "isDragging"], false)
   );
+  if (!gameBoardState.get(toPiece)) {
+    setMovingPiece(null);
+    clearCanvas();
+    drawCachedBoard();
+    drawGamePieces();
+    drawCoordinates();
+    return;
+  }
 
-  if (turnPhase === TURN_PHASES.CAPTURE && canCapture(movingPiece, toPiece)) {
-    const validCaptures = getValidMoves(movingPiece);
+  if (turnPhase === TURN_PHASES.CAPTURE) {
+    const validCaptures = getValidCaptures(movingPiece);
 
     if (validCaptures.includes(toPiece)) {
+      console.log("CAPTURED");
       const pieceToMove = gameBoardState.get(movingPiece);
       setNewgameBoardState(
         gameBoardState.set(movingPiece, false).set(toPiece, pieceToMove)
+      );
+      nextPhase();
+    }
+  }
+
+  if (turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
+    const validCaptures = getValidCaptures(movingPiece);
+    const validStacks = getValidStacks(movingPiece);
+    if (validCaptures.includes(toPiece)) {
+      console.log("CAPTURED");
+      const pieceToMove = gameBoardState.get(movingPiece);
+      setNewgameBoardState(
+        gameBoardState.set(movingPiece, false).set(toPiece, pieceToMove)
+      );
+      nextPhase();
+    }
+    if (validStacks.includes(toPiece)) {
+      console.log("STACKED");
+      const pieceToMove = gameBoardState.get(movingPiece);
+      setNewgameBoardState(
+        gameBoardState
+          .set(movingPiece, false)
+          .set(toPiece, pieceToMove)
+          .setIn([toPiece, "stackSize"], pieceToMove.stackSize + 1)
       );
       nextPhase();
     }
@@ -198,6 +238,13 @@ function canCapture(fromCoordinate, toCoordinate) {
   );
 }
 
+function canStack(fromCoordinate, toCoordinate) {
+  const fromPiece = gameBoardState.get(fromCoordinate);
+  const toPiece = gameBoardState.get(toCoordinate);
+
+  return fromPiece.ownedBy === toPiece.ownedBy;
+}
+
 function isValidEmptyCoordinate(coordinate) {
   return Boolean(
     PLAYABLE_VERTICES.includes(coordinate) && !gameBoardState.get(coordinate)
@@ -241,17 +288,54 @@ function getNextValidCapture(fromCoordinate, direction) {
   return nextMove;
 }
 
-function getValidMoves(fromCoordinate) {
-  if (turnPhase === TURN_PHASES.CAPTURE) {
-    return List([
-      getNextValidCapture(fromCoordinate, "w"),
-      getNextValidCapture(fromCoordinate, "e"),
-      getNextValidCapture(fromCoordinate, "nw"),
-      getNextValidCapture(fromCoordinate, "ne"),
-      getNextValidCapture(fromCoordinate, "sw"),
-      getNextValidCapture(fromCoordinate, "se")
-    ]).filter(isValidMove => isValidMove);
+function getNextValidStack(fromCoordinate, direction) {
+  let nextMove;
+  let coordinateToCheck = fromCoordinate;
+  while (nextMove === undefined) {
+    coordinateToCheck = nextPiece[direction](coordinateToCheck);
+
+    // Not a space that we can play on
+    if (!isPlayableSpace(coordinateToCheck)) {
+      nextMove = false;
+    }
+
+    // This space is empty so we can continue
+    else if (isValidEmptyCoordinate(coordinateToCheck)) {
+      nextMove = undefined;
+    }
+
+    // First piece we encounter can't be captured
+    else if (!canStack(fromCoordinate, coordinateToCheck)) {
+      nextMove = false;
+    }
+    // Finally a piece we can capture
+    else {
+      nextMove = coordinateToCheck;
+    }
   }
+  return nextMove;
+}
+
+function getValidCaptures(fromCoordinate) {
+  return List([
+    getNextValidCapture(fromCoordinate, "w"),
+    getNextValidCapture(fromCoordinate, "e"),
+    getNextValidCapture(fromCoordinate, "nw"),
+    getNextValidCapture(fromCoordinate, "ne"),
+    getNextValidCapture(fromCoordinate, "sw"),
+    getNextValidCapture(fromCoordinate, "se")
+  ]).filter(isValidMove => isValidMove);
+}
+
+function getValidStacks(fromCoordinate) {
+  return List([
+    getNextValidStack(fromCoordinate, "w"),
+    getNextValidStack(fromCoordinate, "e"),
+    getNextValidStack(fromCoordinate, "nw"),
+    getNextValidStack(fromCoordinate, "ne"),
+    getNextValidStack(fromCoordinate, "sw"),
+    getNextValidStack(fromCoordinate, "se")
+  ]).filter(isValidMove => isValidMove);
 }
 
 GAME_STATE_BOARD_CANVAS.addEventListener("mousedown", handleClickPiece);
