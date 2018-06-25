@@ -3,11 +3,87 @@
 
 <head>
   <title>TZAAR</title>
+  <style>
+    * {
+      font-family: roboto
+    }
+
+    .mainContainer {
+      padding: 32px
+    }
+
+    .titleContainer {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+    }
+
+    .buttonContainer {
+      display: 'flex';
+      width: 200px
+    }
+
+    .button {
+      border: 1px solid #ccc;
+      padding: 4px;
+      border-radius: 4px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    .hidden {
+      display: none
+    }
+  </style>
 </head>
 
 <body style="margin:0;padding:0">
-  <canvas id="gameStateBoard"></canvas>
+  <canvas id="gameStateBoard" class="hidden"></canvas>
   <script src="main.js"></script>
+  <div class="mainContainer" id="gameMenu">
+    <div class="titleContainer">
+      <h1>TZAAR</h1>
+      <h5 style="margin-left: 8px">Designed by Kris Burm</h5>
+    </div>
+    <div class="buttonContainer">
+      <div class="button" id="newGame">New Game</div>
+      <div class="button" id="showRules">Rules</div>
+    </div>
+  </div>
+  <div id="rules" class="hidden mainContainer">
+    <div class=" titleContainer ">
+      <h1>Rules</h1>
+
+    </div>
+    <div>
+      <h4>VICTORY CONDITIONS</h4>
+      <p>
+        The game is won if:
+      </p>
+      <p>
+        <p>Your opponent runs out of one of the 3 types of pieces.</p>
+        <p>OR</p>
+        <p>The opponent can't capture during the first phase of their turn.</p>
+      </p>
+
+      <h4>GAMEPLAY</h4>
+      <p>With the exception of the very first move of the game, each turn will consist of two phases.</p>
+      <p>Phase 1: Capture</p>
+      <p>The current player must take one of their pieces and capture a piece of the other player. Pieces move along the edges
+        that make up the board. The capturing piece must be stacked equal to or higher that capturee.</p>
+      <p>Phase 2: Stack or Capture</p>
+      <p>During phase two, the current player has the option of either capturing another piece using the same rules as above
+        or stacking one of their pieces. To stack a piece, move the piece you wish to put on top of another one of the pieces
+        you own. The face of the moved piece will replace the face of the piece stacked on. The height of the stacks are
+        added together.</p>
+      <p>Note: Be careful stacking. You don't want to replace any pieces that would lose you the game!</p>
+
+      <h4>NOTES</h4>
+      <p>The first move of the game is a capture phase. After the move is made, the next players turn begins in phase 1.</p>
+      <p>Pieces eligible for capture or stacking must be connected by a straight line to the moving piece.</p>
+
+    </div>
+  </div>
 </body>
 
 </html>
