@@ -151,13 +151,14 @@ function handleDropPiece({ x, y }) {
       console.log("STACKED");
       const pieceToMove = gameBoardState.get(movingPiece);
       const pieceToReplace = gameBoardState.get(toPiece);
+
       setNewgameBoardState(
         gameBoardState
           .set(movingPiece, false)
           .set(toPiece, pieceToMove)
           .setIn(
             [toPiece, "stackSize"],
-            pieceToMove.stackSize + toPiece.stackSize
+            pieceToMove.stackSize + pieceToReplace.stackSize
           )
       );
       nextPhase();
