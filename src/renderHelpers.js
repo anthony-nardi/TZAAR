@@ -46,7 +46,7 @@ export function drawCoordinate(coordinate) {
     (Math.abs(4 - y) * TRIANGLE_SIDE_LENGTH) / 2 + offsetX + offsetXToCenter;
 
   const yPos = y * TRIANGLE_HEIGHT + offsetYToCenter;
-  context.fillStyle = "#fff";
+  context.fillStyle = "#39ff14";
   context.fillText(coordinate, xPos + 10, yPos + 10);
 }
 

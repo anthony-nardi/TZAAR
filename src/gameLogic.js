@@ -178,11 +178,10 @@ function handleDropPiece({ x, y }) {
   if (Boolean(winner)) {
     alert(`${winner} won!`);
   }
-  console.log(turnPhase);
-  console.log(currentTurn);
 
   if (turnPhase === TURN_PHASES.CAPTURE && currentTurn === PLAYER_TWO) {
     const bestMove = getBestMove();
+    debugger;
   }
 }
 
@@ -402,23 +401,28 @@ function getWinner(gameState) {
 }
 
 function getBestMove() {
-  const gameStatesToCheck = getAllPlayerPieceCoordinates(
-    gameBoardState,
-    PLAYER_TWO
-  ).reduce((map, fromCoordinate) => {
-    const validCaptures = getValidCaptures(fromCoordinate);
+  return getAllPlayerPieceCoordinates(gameBoardState, PLAYER_TWO).reduce(
+    (map, fromCoordinate) => {
+      const validCaptures = getValidCaptures(fromCoordinate);
 
-    const bestMove = validCaptures.reduce((score, toPiece) => {
-      const pieceToMove = gameBoardState.get(fromCoordinate);
-      const nextGameState = gameBoardState
-        .set(toPiece, pieceToMove)
-        .set(fromCoordinate, null);
-      const minimaxResult = minimax(nextGameState, phase, PLAYER_TWO, 3);
-      return minimaxResult;
-    }, -Infinity);
-
-    return map.set([fromCoordinate, nextMove], bestMove);
-  }, Map());
+      const bestMove = validCaptures.reduce(
+        (toPieceCoordinateScore, toPiece) => {
+          const pieceToMove = gameBoardState.get(fromCoordinate);
+          const nextGameState = gameBoardState
+            .set(toPiece, pieceToMove)
+            .set(fromCoordinate, null);
+          const minimaxResult = minimax(nextGameState, phase, PLAYER_TWO, 2);
+          return toPieceCoordinateScore.set(toPiece, minimaxResult);
+        },
+        Map()
+      );
+      const sortedMoves = bestMove.sort();
+      const toCoordinate = sortedMoves.keySeq().first();
+      const score = sortedMoves.first();
+      return map.set(`${fromCoordinate} - ${toCoordinate}`, score);
+    },
+    Map()
+  );
 }
 
 function minimax(gameState, phase, turn, depth) {
@@ -431,7 +435,11 @@ function minimax(gameState, phase, turn, depth) {
   }
 
   if (depth === 0) {
-    return getGameStateScore(gameState, turn);
+    const scoreOfLeaf = getGameStateScore(gameState, turn);
+    if (!scoreOfLeaf) {
+      debugger;
+    }
+    return scoreOfLeaf;
   }
 
   // maximizing player
@@ -454,7 +462,6 @@ function minimax(gameState, phase, turn, depth) {
       );
       return list;
     }, List());
-    console.log(gameStatesToCheck);
 
     gameStatesToCheck.forEach(nextGameState => {
       let maybeBetterValue = minimax(
@@ -487,7 +494,7 @@ function minimax(gameState, phase, turn, depth) {
       );
       return list;
     }, List());
-    console.log(gameStatesToCheck);
+
     gameStatesToCheck.forEach(nextGameState => {
       let maybeBetterValue = minimax(
         nextGameState,
@@ -497,6 +504,7 @@ function minimax(gameState, phase, turn, depth) {
       );
       bestValue = Math.min(maybeBetterValue, bestValue);
     });
+    return bestValue;
   }
 }
 
@@ -514,14 +522,14 @@ function getGameStateScore(gameState, turn) {
     return (
       HIGHEST_SCORE -
       pieceCounts.get(PLAYER_ONE).reduce((playerScore, count, type) => {
-        playerScore = playerScore + count * typeScores[type];
+        return playerScore + count * typeScores[type];
       }, 0)
     );
   }
   return (
     HIGHEST_SCORE -
     pieceCounts.get(PLAYER_TWO).reduce((playerScore, count, type) => {
-      playerScore = playerScore + count * typeScores[type];
+      return playerScore + count * typeScores[type];
     }, 0)
   );
 }
