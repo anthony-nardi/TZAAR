@@ -1,3 +1,4 @@
+import { List, Map, fromJS } from "immutable";
 import {
   DEBUG,
   NUMBER_OF_COLS,
@@ -27,7 +28,7 @@ import {
   clearCanvas
 } from "./renderHelpers";
 import { getBoardCoordinatesFromPixelCoordinates } from "./gameBoardHelpers";
-import { List, Map } from "immutable";
+
 import {
   movingPiece,
   gameBoardState,
@@ -110,6 +111,7 @@ function handleDropPiece({ x, y }) {
   if (!movingPiece) {
     return;
   }
+
   const toPiece = getBoardCoordinatesFromPixelCoordinates(x, y);
   setNewgameBoardState(
     gameBoardState.setIn([movingPiece, "isDragging"], false)
@@ -170,6 +172,18 @@ function handleDropPiece({ x, y }) {
   drawCachedBoard();
   drawGamePieces();
   drawCoordinates();
+
+  const winner = getWinner(gameBoardState);
+
+  if (Boolean(winner)) {
+    alert(`${winner} won!`);
+  }
+  console.log(turnPhase);
+  console.log(currentTurn);
+
+  if (turnPhase === TURN_PHASES.CAPTURE && currentTurn === PLAYER_TWO) {
+    const bestMove = getBestMove();
+  }
 }
 
 export function initGame() {
@@ -341,6 +355,175 @@ function getValidStacks(fromCoordinate) {
     getNextValidStack(fromCoordinate, "sw"),
     getNextValidStack(fromCoordinate, "se")
   ]).filter(isValidMove => isValidMove);
+}
+
+function getPieceCounts(gameState) {
+  return gameState.reduce(
+    (piecesByPlayer, piece) => {
+      if (!piece) {
+        return piecesByPlayer;
+      }
+      const { ownedBy, type } = piece;
+      return piecesByPlayer.updateIn([ownedBy, type], count => count + 1);
+    },
+    fromJS({
+      [PLAYER_ONE]: {
+        [TOTT]: 0,
+        [TZARRA]: 0,
+        [TZAAR]: 0
+      },
+      [PLAYER_TWO]: {
+        [TOTT]: 0,
+        [TZARRA]: 0,
+        [TZAAR]: 0
+      }
+    })
+  );
+}
+
+function getAllPlayerPieceCoordinates(gamestate, player) {
+  return gameBoardState.filter(({ ownedBy }) => ownedBy === player).keySeq();
+}
+
+function getWinner(gameState) {
+  const pieceCountsByPlayer = getPieceCounts(gameState);
+
+  const playerOneLost =
+    pieceCountsByPlayer.get(PLAYER_ONE).find(count => count === 0) === 0;
+  const playerTwoLost =
+    pieceCountsByPlayer.get(PLAYER_TWO).find(count => count === 0) === 0;
+
+  if (playerOneLost) {
+    return PLAYER_TWO;
+  }
+  if (playerTwoLost) {
+    return PLAYER_ONE;
+  }
+}
+
+function getBestMove() {
+  const gameStatesToCheck = getAllPlayerPieceCoordinates(
+    gameBoardState,
+    PLAYER_TWO
+  ).reduce((map, fromCoordinate) => {
+    const validCaptures = getValidCaptures(fromCoordinate);
+
+    const bestMove = validCaptures.reduce((score, toPiece) => {
+      const pieceToMove = gameBoardState.get(fromCoordinate);
+      const nextGameState = gameBoardState
+        .set(toPiece, pieceToMove)
+        .set(fromCoordinate, null);
+      const minimaxResult = minimax(nextGameState, phase, PLAYER_TWO, 3);
+      return minimaxResult;
+    }, -Infinity);
+
+    return map.set([fromCoordinate, nextMove], bestMove);
+  }, Map());
+}
+
+function minimax(gameState, phase, turn, depth) {
+  const winner = getWinner(gameState);
+  if (winner === PLAYER_ONE) {
+    return -Infinity;
+  }
+  if (winner === PLAYER_TWO) {
+    return Infinity;
+  }
+
+  if (depth === 0) {
+    return getGameStateScore(gameState, turn);
+  }
+
+  // maximizing player
+  if (turn === PLAYER_TWO) {
+    let bestValue = -Infinity;
+
+    const gameStatesToCheck = getAllPlayerPieceCoordinates(
+      gameState,
+      PLAYER_TWO
+    ).reduce((list, fromCoordinate) => {
+      const pieceToMove = gameBoardState.get(fromCoordinate);
+      const validCaptures = getValidCaptures(fromCoordinate).forEach(
+        capturedPieceCoordinate => {
+          const capturedPiece = gameBoardState.get(capturedPieceCoordinate);
+          const nextGameState = gameBoardState
+            .set(capturedPieceCoordinate, pieceToMove)
+            .set(fromCoordinate, null);
+          list = list.push(nextGameState);
+        }
+      );
+      return list;
+    }, List());
+    console.log(gameStatesToCheck);
+
+    gameStatesToCheck.forEach(nextGameState => {
+      let maybeBetterValue = minimax(
+        nextGameState,
+        phase,
+        PLAYER_ONE,
+        depth - 1
+      );
+      bestValue = Math.max(maybeBetterValue, bestValue);
+    });
+    return bestValue;
+  }
+
+  // minimizing player
+  if (turn === PLAYER_ONE) {
+    let bestValue = Infinity;
+    const gameStatesToCheck = getAllPlayerPieceCoordinates(
+      gameState,
+      PLAYER_ONE
+    ).reduce((list, fromCoordinate) => {
+      const pieceToMove = gameBoardState.get(fromCoordinate);
+      const validCaptures = getValidCaptures(fromCoordinate).forEach(
+        capturedPieceCoordinate => {
+          const capturedPiece = gameBoardState.get(capturedPieceCoordinate);
+          const nextGameState = gameBoardState
+            .set(capturedPieceCoordinate, pieceToMove)
+            .set(fromCoordinate, null);
+          list = list.push(nextGameState);
+        }
+      );
+      return list;
+    }, List());
+    console.log(gameStatesToCheck);
+    gameStatesToCheck.forEach(nextGameState => {
+      let maybeBetterValue = minimax(
+        nextGameState,
+        phase,
+        PLAYER_TWO,
+        depth - 1
+      );
+      bestValue = Math.min(maybeBetterValue, bestValue);
+    });
+  }
+}
+
+function getGameStateScore(gameState, turn) {
+  const HIGHEST_SCORE =
+    NUMBER_OF_TOTTS * 1 + NUMBER_OF_TZARRAS * 2 + NUMBER_OF_TZAARS * 3;
+  const typeScores = {
+    [TOTT]: 1,
+    [TZARRA]: 2,
+    [TZAAR]: 3
+  };
+  const pieceCounts = getPieceCounts(gameState);
+
+  if (turn === PLAYER_ONE) {
+    return (
+      HIGHEST_SCORE -
+      pieceCounts.get(PLAYER_ONE).reduce((playerScore, count, type) => {
+        playerScore = playerScore + count * typeScores[type];
+      }, 0)
+    );
+  }
+  return (
+    HIGHEST_SCORE -
+    pieceCounts.get(PLAYER_TWO).reduce((playerScore, count, type) => {
+      playerScore = playerScore + count * typeScores[type];
+    }, 0)
+  );
 }
 
 GAME_STATE_BOARD_CANVAS.addEventListener("mousedown", handleClickPiece);
