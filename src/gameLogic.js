@@ -27,7 +27,20 @@ import {
   drawGamePieces,
   clearCanvas
 } from "./renderHelpers";
-import { getBoardCoordinatesFromPixelCoordinates } from "./gameBoardHelpers";
+import {
+  getBoardCoordinatesFromPixelCoordinates,
+  isPlayableSpace,
+  goWest,
+  goEast,
+  goNorthWest,
+  goNorthEast,
+  goSouthWest,
+  goSouthEast,
+  setupBoardWithPieces,
+  canCapture,
+  canStack,
+  isValidEmptyCoordinate
+} from "./gameBoardHelpers";
 
 import {
   movingPiece,
@@ -38,47 +51,6 @@ import {
   currentTurn,
   turnPhase
 } from "./gameState";
-
-let PLAYER_ONE_PIECES = List();
-let PLAYER_TWO_PIECES = List();
-
-export function setupBoardWithPieces() {
-  for (let i = 0; i < NUMBER_OF_TOTTS; i++) {
-    PLAYER_ONE_PIECES = PLAYER_ONE_PIECES.push(
-      new GamePieceRecord({ type: TOTT, ownedBy: "PLAYER_ONE" })
-    );
-    PLAYER_TWO_PIECES = PLAYER_TWO_PIECES.push(
-      new GamePieceRecord({ type: TOTT, ownedBy: "PLAYER_TWO" })
-    );
-  }
-
-  for (let i = 0; i < NUMBER_OF_TZARRAS; i++) {
-    PLAYER_ONE_PIECES = PLAYER_ONE_PIECES.push(
-      new GamePieceRecord({ type: TZARRA, ownedBy: "PLAYER_ONE" })
-    );
-    PLAYER_TWO_PIECES = PLAYER_TWO_PIECES.push(
-      new GamePieceRecord({ type: TZARRA, ownedBy: "PLAYER_TWO" })
-    );
-  }
-
-  for (let i = 0; i < NUMBER_OF_TZAARS; i++) {
-    PLAYER_ONE_PIECES = PLAYER_ONE_PIECES.push(
-      new GamePieceRecord({ type: TZAAR, ownedBy: "PLAYER_ONE" })
-    );
-    PLAYER_TWO_PIECES = PLAYER_TWO_PIECES.push(
-      new GamePieceRecord({ type: TZAAR, ownedBy: "PLAYER_TWO" })
-    );
-  }
-
-  const allGamePieces = PLAYER_ONE_PIECES.concat(PLAYER_TWO_PIECES);
-  const shuffledPieces = allGamePieces.sortBy(Math.random);
-
-  shuffledPieces.forEach((piece, index) => {
-    setNewgameBoardState(gameBoardState.set(PLAYABLE_VERTICES[index], piece));
-  });
-
-  drawGameBoardState();
-}
 
 function handleClickPiece({ x, y }) {
   const key = getBoardCoordinatesFromPixelCoordinates(x, y);
@@ -215,84 +187,7 @@ export function initGame() {
   drawInitialGrid();
   drawCoordinates();
   setupBoardWithPieces();
-}
-
-function goWest(coordinate) {
-  let [x, y] = coordinate.split(",");
-  x = Number(x);
-  y = Number(y);
-
-  return `${x - 1},${y}`;
-}
-
-function goEast(coordinate) {
-  let [x, y] = coordinate.split(",");
-
-  x = Number(x);
-  y = Number(y);
-
-  return `${x + 1},${y}`;
-}
-
-function goNorthWest(coordinate) {
-  let [x, y] = coordinate.split(",");
-
-  x = Number(x);
-  y = Number(y);
-
-  return `${x},${y - 1}`;
-}
-
-function goNorthEast(coordinate) {
-  let [x, y] = coordinate.split(",");
-  x = Number(x);
-  y = Number(y);
-
-  return `${x + 1},${y - 1}`;
-}
-
-function goSouthWest(coordinate) {
-  let [x, y] = coordinate.split(",");
-
-  x = Number(x);
-  y = Number(y);
-
-  return `${x - 1},${y + 1}`;
-}
-
-function goSouthEast(coordinate) {
-  let [x, y] = coordinate.split(",");
-  x = Number(x);
-  y = Number(y);
-
-  return `${x},${y + 1}`;
-}
-
-function isPlayableSpace(coordinate) {
-  return PLAYABLE_VERTICES.includes(coordinate);
-}
-
-function canCapture(fromCoordinate, toCoordinate) {
-  const fromPiece = gameBoardState.get(fromCoordinate);
-  const toPiece = gameBoardState.get(toCoordinate);
-
-  return (
-    fromPiece.ownedBy !== toPiece.ownedBy &&
-    fromPiece.stackSize >= toPiece.stackSize
-  );
-}
-
-function canStack(fromCoordinate, toCoordinate) {
-  const fromPiece = gameBoardState.get(fromCoordinate);
-  const toPiece = gameBoardState.get(toCoordinate);
-
-  return fromPiece.ownedBy === toPiece.ownedBy;
-}
-
-function isValidEmptyCoordinate(coordinate) {
-  return Boolean(
-    PLAYABLE_VERTICES.includes(coordinate) && !gameBoardState.get(coordinate)
-  );
+  drawGameBoardState();
 }
 
 const nextPiece = {
