@@ -1,27 +1,27 @@
 import { initGame } from "./gameLogic";
 
 function startNewGame() {
-  document.getElementById("gameMenu").classList.add("hidden");
-  document.getElementById("gameStateBoard").classList.remove("hidden");
-  document.getElementById("gameState").classList.remove("hidden");
+  document.getElementById("gameMenuDiv").classList.add("hidden");
+  document.getElementById("gameStateBoardDiv").classList.remove("hidden");
+  document.getElementById("gameStateDiv").classList.remove("hidden");
   initGame();
 }
 
 function backToGameMenu() {
-  document.getElementById("gameMenu").classList.remove("hidden");
-  document.getElementById("rules").classList.add("hidden");
+  document.getElementById("gameMenuDiv").classList.remove("hidden");
+  document.getElementById("rulesDiv").classList.add("hidden");
 }
 
 function showRules() {
-  document.getElementById("gameMenu").classList.add("hidden");
-  document.getElementById("rules").classList.remove("hidden");
+  document.getElementById("gameMenuDiv").classList.add("hidden");
+  document.getElementById("rulesDiv").classList.remove("hidden");
 }
 
 function startApp() {
-  document.getElementById("newGame").addEventListener("click", startNewGame);
-  document.getElementById("showRules").addEventListener("click", showRules);
+  document.getElementById("newGameDiv").addEventListener("click", startNewGame);
+  document.getElementById("showRulesDiv").addEventListener("click", showRules);
   document
-    .getElementById("backToGameMenu")
+    .getElementById("backToGameMenuDiv")
     .addEventListener("click", backToGameMenu);
 }
 window.addEventListener("DOMContentLoaded", startApp, false);
