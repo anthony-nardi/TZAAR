@@ -111,3 +111,48 @@ export function clearCanvas() {
   const context = getContext();
   context.clearRect(0, 0, window.innerWidth, window.innerHeight);
 }
+
+function timeFunction(t) {
+  return --t * t * t + 1;
+}
+
+export function renderMovingPiece(
+  piece,
+  from,
+  to,
+  duration,
+  startTime,
+  callback
+) {
+  const now = Date.now();
+
+  const timePassedInMilliSec = now - startTime;
+
+  if (timePassedInMilliSec > duration) {
+    callback();
+    return;
+  }
+
+  const timePassed = Math.min(Math.max((now - startTime) / duration, 0), 1);
+  const [fromX, fromY] = from.split(",");
+  const [toX, toY] = to.split(",");
+
+  const distance = Math.sqrt(
+    Math.pow(fromX - toX, 2) + Math.pow(fromY - toY, 2)
+  );
+
+  const currentDistance = (timeFunction(timePassed) * distance) / distance;
+
+  const renderX = (1 - currentDistance) * fromX + currentDistance * toX;
+  const renderY = (1 - currentDistance) * fromY + currentDistance * toY;
+  console.log(renderX);
+
+  clearCanvas();
+  drawCachedBoard();
+  drawGamePieces();
+  drawGamePiece(piece, renderX, renderY);
+
+  window.requestAnimationFrame(() => {
+    renderMovingPiece(piece, from, to, duration, startTime, callback);
+  });
+}

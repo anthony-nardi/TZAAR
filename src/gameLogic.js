@@ -25,10 +25,12 @@ import {
   drawGameBoardState,
   drawGamePiece,
   drawGamePieces,
-  clearCanvas
+  clearCanvas,
+  renderMovingPiece
 } from "./renderHelpers";
 import {
   getBoardCoordinatesFromPixelCoordinates,
+  getPixelCoordinatesFromBoardCoordinates,
   isPlayableSpace,
   goWest,
   goEast,
@@ -153,7 +155,6 @@ function handleDropPiece({ x, y }) {
 
   if (turnPhase === TURN_PHASES.CAPTURE && currentTurn === PLAYER_TWO) {
     moveAI();
-    moveAI();
   }
 }
 
@@ -173,14 +174,39 @@ function moveAI() {
 
   const [fromCoordinate, toCoordinate] = moveToMake.split("->");
   const fromPiece = gameBoardState.get(fromCoordinate);
-  setNewgameBoardState(
-    gameBoardState.set(fromCoordinate, false).set(toCoordinate, fromPiece)
-  );
+  setNewgameBoardState(gameBoardState.set(fromCoordinate, false));
   nextPhase();
-  clearCanvas();
-  drawCachedBoard();
-  drawGamePieces();
-  drawCoordinates();
+
+  const fromPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
+    fromCoordinate
+  );
+  const toPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
+    toCoordinate
+  );
+
+  console.log(`MOVING FROM ${fromCoordinate} TO ${toCoordinate}`);
+
+  renderMovingPiece(
+    fromPiece,
+    fromPixelCoodinate,
+    toPixelCoordinate,
+    2000,
+    Date.now(),
+    () => {
+      setNewgameBoardState(gameBoardState.set(toCoordinate, fromPiece));
+
+      if (
+        turnPhase === TURN_PHASES.STACK_OR_CAPTURE &&
+        currentTurn === PLAYER_TWO
+      ) {
+        moveAI();
+      }
+    }
+  );
+  // clearCanvas();
+  // drawCachedBoard();
+  // drawGamePieces();
+  // drawCoordinates();
 }
 
 export function initGame() {
