@@ -51,6 +51,7 @@ export function drawCoordinate(coordinate) {
 }
 
 export function drawGameBoardState() {
+  clearCanvas();
   drawCachedBoard();
   drawGamePieces();
   drawCoordinates();

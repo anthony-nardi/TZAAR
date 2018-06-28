@@ -54,30 +54,31 @@ import {
   turnPhase
 } from "./gameState";
 
+function isCurrentPlayerPiece(boardCoordinate) {
+  return (
+    gameBoardState.get(boardCoordinate) &&
+    gameBoardState.getIn([boardCoordinate, "ownedBy"]) === currentTurn
+  );
+}
+
 function handleClickPiece({ x, y }) {
-  const key = getBoardCoordinatesFromPixelCoordinates(x, y);
+  const boardCoordinate = getBoardCoordinatesFromPixelCoordinates(x, y);
 
-  if (!gameBoardState.get(key)) {
+  if (!isCurrentPlayerPiece(boardCoordinate)) {
     return;
   }
 
-  if (gameBoardState.getIn([key, "ownedBy"]) !== currentTurn) {
-    return;
-  }
-
-  setNewgameBoardState(gameBoardState.setIn([key, "isDragging"], true));
-
-  setMovingPiece(key);
+  setNewgameBoardState(
+    gameBoardState.setIn([boardCoordinate, "isDragging"], true)
+  );
+  setMovingPiece(boardCoordinate);
 }
 
 function handleMovePiece({ x, y }) {
   if (!movingPiece) {
     return;
   }
-  clearCanvas();
-  drawCachedBoard();
-  drawGamePieces();
-  drawCoordinates();
+  drawGameBoardState();
   drawGamePiece(gameBoardState.get(movingPiece), x, y);
 }
 
@@ -85,77 +86,71 @@ function handleDropPiece({ x, y }) {
   if (!movingPiece) {
     return;
   }
+  const toPieceBoardCoordinates = getBoardCoordinatesFromPixelCoordinates(x, y);
 
-  const toPiece = getBoardCoordinatesFromPixelCoordinates(x, y);
   setNewgameBoardState(
     gameBoardState.setIn([movingPiece, "isDragging"], false)
   );
-  if (!gameBoardState.get(toPiece)) {
+
+  if (!gameBoardState.get(toPieceBoardCoordinates)) {
     setMovingPiece(null);
-    clearCanvas();
-    drawCachedBoard();
-    drawGamePieces();
-    drawCoordinates();
+    drawGameBoardState();
     return;
   }
 
-  if (turnPhase === TURN_PHASES.CAPTURE) {
-    const validCaptures = getValidCaptures(movingPiece);
+  const validCaptures = getValidCaptures(movingPiece);
+  const isValidCapture = validCaptures.includes(toPieceBoardCoordinates);
+  const pieceToMove = gameBoardState.get(movingPiece);
 
-    if (validCaptures.includes(toPiece)) {
-      console.log("CAPTURED");
-      const pieceToMove = gameBoardState.get(movingPiece);
-      setNewgameBoardState(
-        gameBoardState.set(movingPiece, false).set(toPiece, pieceToMove)
-      );
-      nextPhase();
-    }
-  }
-
-  if (turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
-    const validCaptures = getValidCaptures(movingPiece);
+  if (turnPhase === TURN_PHASES.CAPTURE && isValidCapture) {
+    setNewgameBoardState(
+      gameBoardState
+        .set(movingPiece, false)
+        .set(toPieceBoardCoordinates, pieceToMove)
+    );
+    checkGameStateAndStartNextTurn();
+  } else if (turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
     const validStacks = getValidStacks(movingPiece);
-    if (validCaptures.includes(toPiece)) {
-      console.log("CAPTURED");
-      const pieceToMove = gameBoardState.get(movingPiece);
+    if (isValidCapture) {
       setNewgameBoardState(
-        gameBoardState.set(movingPiece, false).set(toPiece, pieceToMove)
+        gameBoardState
+          .set(movingPiece, false)
+          .set(toPieceBoardCoordinates, pieceToMove)
       );
-      nextPhase();
+      checkGameStateAndStartNextTurn();
     }
-    if (validStacks.includes(toPiece)) {
-      console.log("STACKED");
-      const pieceToMove = gameBoardState.get(movingPiece);
-      const pieceToReplace = gameBoardState.get(toPiece);
+    if (validStacks.includes(toPieceBoardCoordinates)) {
+      const pieceToReplace = gameBoardState.get(toPieceBoardCoordinates);
 
       setNewgameBoardState(
         gameBoardState
           .set(movingPiece, false)
-          .set(toPiece, pieceToMove)
+          .set(toPieceBoardCoordinates, pieceToMove)
           .setIn(
-            [toPiece, "stackSize"],
+            [toPieceBoardCoordinates, "stackSize"],
             pieceToMove.stackSize + pieceToReplace.stackSize
           )
       );
-      nextPhase();
+      checkGameStateAndStartNextTurn();
     }
   }
 
   setMovingPiece(null);
-  clearCanvas();
-  drawCachedBoard();
-  drawGamePieces();
-  drawCoordinates();
-
-  const winner = getWinner(gameBoardState);
-
-  if (Boolean(winner)) {
-    alert(`${winner} won!`);
-  }
+  drawGameBoardState();
 
   if (turnPhase === TURN_PHASES.CAPTURE && currentTurn === PLAYER_TWO) {
     moveAI();
   }
+}
+
+function checkGameStateAndStartNextTurn() {
+  const winner = getWinner(gameBoardState);
+
+  if (Boolean(winner)) {
+    alert(`${winner} won!`);
+    return;
+  }
+  nextPhase();
 }
 
 function moveAI() {
@@ -175,7 +170,6 @@ function moveAI() {
   const [fromCoordinate, toCoordinate] = moveToMake.split("->");
   const fromPiece = gameBoardState.get(fromCoordinate);
   setNewgameBoardState(gameBoardState.set(fromCoordinate, false));
-  nextPhase();
 
   const fromPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
     fromCoordinate
@@ -193,6 +187,7 @@ function moveAI() {
     2000,
     Date.now(),
     () => {
+      checkGameStateAndStartNextTurn();
       setNewgameBoardState(gameBoardState.set(toCoordinate, fromPiece));
 
       if (
@@ -203,17 +198,13 @@ function moveAI() {
       }
     }
   );
-  // clearCanvas();
-  // drawCachedBoard();
-  // drawGamePieces();
-  // drawCoordinates();
 }
 
 export function initGame() {
   drawInitialGrid();
-  drawCoordinates();
   setupBoardWithPieces();
   drawGameBoardState();
+  drawCoordinates();
 }
 
 const nextPiece = {
