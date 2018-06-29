@@ -146,7 +146,6 @@ export function renderMovingPiece(
 
   const renderX = (1 - currentDistance) * fromX + currentDistance * toX;
   const renderY = (1 - currentDistance) * fromY + currentDistance * toY;
-  console.log(renderX);
 
   clearCanvas();
   drawCachedBoard();

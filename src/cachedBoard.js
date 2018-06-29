@@ -138,7 +138,7 @@ function renderHexagonBorder() {
 
   context.closePath();
   context.lineWidth = 2;
-  context.strokeStyle = "#f33ade";
+  context.strokeStyle = "#666666";
   context.stroke();
 }
 
@@ -173,7 +173,7 @@ function renderInnerHexagonBorder() {
 
   context.closePath();
   context.lineWidth = 2;
-  context.strokeStyle = "#f33ade";
+  context.strokeStyle = "#666666";
   context.stroke();
 }
 
