@@ -161,7 +161,14 @@ function moveAI() {
 
   let highestScore = -Infinity;
   let moveToMake = null;
-  const bestMove = getBestMove().forEach((val, key) => {
+  const bestMoves = getBestMove();
+
+  if (!bestMoves && turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
+    checkGameStateAndStartNextTurn();
+    return;
+  }
+
+  const bestMove = bestMoves.forEach((val, key) => {
     if (val > highestScore) {
       moveToMake = key;
       highestScore = val;
@@ -344,9 +351,14 @@ function getWinner(gameState) {
   const pieceCountsByPlayer = getPieces(gameState);
 
   const playerOneLost =
-    pieceCountsByPlayer.get(PLAYER_ONE).find(pieces => pieces.size === 0) === 0;
+    !pieceCountsByPlayer.getIn([PLAYER_ONE, TOTT]).size ||
+    !pieceCountsByPlayer.getIn([PLAYER_ONE, TZARRA]).size ||
+    !pieceCountsByPlayer.getIn([PLAYER_ONE, TZAAR]).size;
+
   const playerTwoLost =
-    pieceCountsByPlayer.get(PLAYER_TWO).find(pieces => pieces.size === 0) === 0;
+    !pieceCountsByPlayer.getIn([PLAYER_TWO, TOTT]).size ||
+    !pieceCountsByPlayer.getIn([PLAYER_TWO, TZARRA]).size ||
+    !pieceCountsByPlayer.getIn([PLAYER_TWO, TZAAR]).size;
 
   if (playerOneLost) {
     return PLAYER_TWO;
@@ -434,7 +446,11 @@ function getBestMove() {
   if (turnPhase === TURN_PHASES.CAPTURE) {
     return getBestCapture();
   }
-  return getBestStack();
+  const bestStack = getBestStack().filter(move => move);
+
+  if (bestStack && bestStack.size) {
+    return bestStack;
+  }
 }
 
 function minimax(gameState, phase, turn, depth) {
