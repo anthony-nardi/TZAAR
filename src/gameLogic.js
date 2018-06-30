@@ -412,7 +412,7 @@ function getWinner(gameState) {
 
 function getBestMove2() {
   const EARLY_GAME = numberOfTurnsIntoGame < 10;
-
+  console.time("all game states");
   console.log(`NUMBER OF TURNS INTO GAME: ${numberOfTurnsIntoGame}`);
   let allPossibleStatesAfterTurn = EARLY_GAME
     ? getEarlyGamePossibleMoveSequences(TZAAR)
@@ -425,7 +425,8 @@ function getBestMove2() {
   if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
     allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(TOTT);
   }
-
+  console.timeEnd("all game states");
+  console.time("get scores");
   console.log(`ALL POSSIBLE GAME STATES: ${allPossibleStatesAfterTurn.size}`);
   const scoresByMoveSeq = allPossibleStatesAfterTurn.reduce(
     (scoreMap, gameState, moveSeq) => {
@@ -433,7 +434,8 @@ function getBestMove2() {
     },
     Map()
   );
-
+  debugger;
+  console.timeEnd("get scores");
   const bestMove = scoresByMoveSeq.sort().reverse();
   const movesToMake = bestMove.keySeq().first();
   return movesToMake;
@@ -469,7 +471,7 @@ function getEarlyGamePossibleMoveSequences(PIECE_TYPE) {
       (statesAfterCapture, fromCoordinate) => {
         const fromPiece = gameBoardState.get(fromCoordinate);
         const nextGameState = gameBoardState
-          .set(toCoordinate, null)
+          .set(fromCoordinate, null)
           .set(toCoordinate, fromPiece);
         return statesAfterCapture.set(
           `${fromCoordinate}->${toCoordinate}`,
