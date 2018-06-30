@@ -135,6 +135,7 @@ export function renderMovingPiece(
   }
 
   const timePassed = Math.min(Math.max((now - startTime) / duration, 0), 1);
+
   const [fromX, fromY] = from.split(",");
   const [toX, toY] = to.split(",");
 

@@ -157,9 +157,9 @@ export function setupBoardWithPieces() {
   });
 }
 
-export function canCapture(fromCoordinate, toCoordinate) {
-  const fromPiece = gameBoardState.get(fromCoordinate);
-  const toPiece = gameBoardState.get(toCoordinate);
+export function canCapture(fromCoordinate, toCoordinate, gameState) {
+  const fromPiece = gameState.get(fromCoordinate);
+  const toPiece = gameState.get(toCoordinate);
 
   return (
     fromPiece.ownedBy !== toPiece.ownedBy &&
@@ -167,15 +167,15 @@ export function canCapture(fromCoordinate, toCoordinate) {
   );
 }
 
-export function canStack(fromCoordinate, toCoordinate) {
-  const fromPiece = gameBoardState.get(fromCoordinate);
-  const toPiece = gameBoardState.get(toCoordinate);
+export function canStack(fromCoordinate, toCoordinate, gameState) {
+  const fromPiece = gameState.get(fromCoordinate);
+  const toPiece = gameState.get(toCoordinate);
 
   return fromPiece.ownedBy === toPiece.ownedBy;
 }
 
-export function isValidEmptyCoordinate(coordinate) {
+export function isValidEmptyCoordinate(coordinate, gameState) {
   return Boolean(
-    PLAYABLE_VERTICES.includes(coordinate) && !gameBoardState.get(coordinate)
+    PLAYABLE_VERTICES.includes(coordinate) && !gameState.get(coordinate)
   );
 }
