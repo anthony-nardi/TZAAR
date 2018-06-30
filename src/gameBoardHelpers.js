@@ -1,11 +1,7 @@
 import {
-  DEBUG,
-  NUMBER_OF_COLS,
-  NUMBER_OF_ROWS,
   TRIANGLE_SIDE_LENGTH,
   TRIANGLE_HEIGHT,
   PLAYABLE_VERTICES,
-  GAME_STATE_BOARD_CANVAS,
   GamePieceRecord,
   TZAAR,
   TOTT,
@@ -15,15 +11,7 @@ import {
   NUMBER_OF_TZAARS
 } from "./constants";
 import { List } from "immutable";
-import {
-  movingPiece,
-  gameBoardState,
-  setNewgameBoardState,
-  setMovingPiece,
-  nextPhase,
-  currentTurn,
-  turnPhase
-} from "./gameState";
+import { gameBoardState, setNewgameBoardState } from "./gameState";
 
 export function getPixelCoordinatesFromBoardCoordinates(coordinate) {
   const [x, y] = coordinate.split(",");
