@@ -152,7 +152,7 @@ function moveAI() {
     return;
   }
 
-  const bestMove = getBestMove2();
+  const bestMove = getBestMove2(gameBoardState);
 
   if (!bestMove && turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
     checkGameStateAndStartNextTurn();
@@ -410,31 +410,40 @@ function getWinner(gameState) {
   }
 }
 
-function getBestMove2() {
+function getBestMove2(gameState) {
   const EARLY_GAME = numberOfTurnsIntoGame < 10;
+
   console.time("all game states");
   console.log(`NUMBER OF TURNS INTO GAME: ${numberOfTurnsIntoGame}`);
+
   let allPossibleStatesAfterTurn = EARLY_GAME
-    ? getEarlyGamePossibleMoveSequences(TZAAR)
-    : getPossibleMoveSequences();
+    ? getEarlyGamePossibleMoveSequences(gameState, TZAAR)
+    : getPossibleMoveSequences(gameState);
 
   if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
-    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(TZARRA);
+    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
+      gameState,
+      TZARRA
+    );
   }
 
   if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
-    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(TOTT);
+    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
+      gameState,
+      TOTT
+    );
   }
   console.timeEnd("all game states");
   console.time("get scores");
   console.log(`ALL POSSIBLE GAME STATES: ${allPossibleStatesAfterTurn.size}`);
+
   const scoresByMoveSeq = allPossibleStatesAfterTurn.reduce(
-    (scoreMap, gameState, moveSeq) => {
-      return scoreMap.set(moveSeq, minimax2(gameState, PLAYER_TWO, 0));
+    (scoreMap, gameStateToCheck, moveSeq) => {
+      return scoreMap.set(moveSeq, minimax2(gameStateToCheck, PLAYER_TWO, 0));
     },
     Map()
   );
-  debugger;
+
   console.timeEnd("get scores");
   const bestMove = scoresByMoveSeq.sort().reverse();
   const movesToMake = bestMove.keySeq().first();
@@ -452,25 +461,22 @@ function getInvertedValidCaptures(toCoordinate, gameState) {
   ]).filter(isValidMove => isValidMove);
 }
 
-function getEarlyGamePossibleMoveSequences(PIECE_TYPE) {
+function getEarlyGamePossibleMoveSequences(gameState, PIECE_TYPE) {
   const allPlayerPieces = getAllPlayerPieceCoordinatesByType(
-    gameBoardState,
+    gameState,
     PLAYER_ONE,
     PIECE_TYPE
   );
 
   return allPlayerPieces.reduce((allGameStatesAfterMoveSeq, toCoordinate) => {
-    const validCaptures = getInvertedValidCaptures(
-      toCoordinate,
-      gameBoardState
-    );
+    const validCaptures = getInvertedValidCaptures(toCoordinate, gameState);
 
     // For every piece, get all possible captures
     // for each and put the resulting game state into a list.
     const allCaptureStates = validCaptures.reduce(
       (statesAfterCapture, fromCoordinate) => {
-        const fromPiece = gameBoardState.get(fromCoordinate);
-        const nextGameState = gameBoardState
+        const fromPiece = gameState.get(fromCoordinate);
+        const nextGameState = gameState
           .set(fromCoordinate, null)
           .set(toCoordinate, fromPiece);
         return statesAfterCapture.set(
@@ -485,10 +491,26 @@ function getEarlyGamePossibleMoveSequences(PIECE_TYPE) {
     // get all player pieces and return all game states
     // for every valid stack you can make
     allCaptureStates.forEach((stateAfterCapture, fromToKey) => {
-      const allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinates(
+      let allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
         stateAfterCapture,
-        PLAYER_TWO
+        PLAYER_TWO,
+        TZAAR
       );
+
+      if (!allPlayerPiecesAfterCapture.size) {
+        allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
+          stateAfterCapture,
+          PLAYER_TWO,
+          TZARRA
+        );
+      }
+      if (!allPlayerPiecesAfterCapture.size) {
+        allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
+          stateAfterCapture,
+          PLAYER_TWO,
+          TOTT
+        );
+      }
 
       allPlayerPiecesAfterCapture.forEach(playerPieceCoordinateAfterCapture => {
         const validStacks = getValidStacks(
@@ -524,21 +546,18 @@ function getEarlyGamePossibleMoveSequences(PIECE_TYPE) {
   }, Map());
 }
 
-function getPossibleMoveSequences() {
-  const allPlayerPieces = getAllPlayerPieceCoordinates(
-    gameBoardState,
-    PLAYER_TWO
-  );
+function getPossibleMoveSequences(gameState) {
+  const allPlayerPieces = getAllPlayerPieceCoordinates(gameState, PLAYER_TWO);
 
   return allPlayerPieces.reduce((allGameStatesAfterMoveSeq, fromCoordinate) => {
-    const validCaptures = getValidCaptures(fromCoordinate, gameBoardState);
+    const validCaptures = getValidCaptures(fromCoordinate, gameState);
 
     // For every piece, get all possible captures
     // for each and put the resulting game state into a list.
     const allCaptureStates = validCaptures.reduce(
       (statesAfterCapture, toCoordinate) => {
-        const fromPiece = gameBoardState.get(fromCoordinate);
-        const nextGameState = gameBoardState
+        const fromPiece = gameState.get(fromCoordinate);
+        const nextGameState = gameState
           .set(fromCoordinate, null)
           .set(toCoordinate, fromPiece);
         return statesAfterCapture.set(
@@ -548,6 +567,8 @@ function getPossibleMoveSequences() {
       },
       Map()
     );
+
+    console.log(`All capture states: ${allCaptureStates.size}`);
 
     // For every game state resulting from the above process,
     // get all player pieces and return all game states
@@ -604,7 +625,7 @@ function minimax2(gameState, turn, depth) {
   if (depth === 0) {
     return getGameStateScore2(gameState);
   }
-  debugger;
+
   // maximizing player
   if (turn === PLAYER_TWO) {
     let bestValue = -Infinity;
@@ -632,12 +653,7 @@ function minimax2(gameState, turn, depth) {
       );
 
     gameStatesToCheck.forEach(nextGameState => {
-      let maybeBetterValue = minimax2(
-        nextGameState,
-        phase,
-        PLAYER_ONE,
-        depth - 1
-      );
+      let maybeBetterValue = minimax2(nextGameState, PLAYER_ONE, depth - 1);
       bestValue = Math.max(maybeBetterValue, bestValue);
     });
     return bestValue;
@@ -663,12 +679,7 @@ function minimax2(gameState, turn, depth) {
     }, List());
 
     gameStatesToCheck.forEach(nextGameState => {
-      let maybeBetterValue = minimax2(
-        nextGameState,
-        phase,
-        PLAYER_TWO,
-        depth - 1
-      );
+      let maybeBetterValue = minimax2(nextGameState, PLAYER_TWO, depth - 1);
       bestValue = Math.min(maybeBetterValue, bestValue);
     });
     return bestValue;
