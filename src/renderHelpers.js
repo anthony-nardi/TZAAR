@@ -1,25 +1,16 @@
-import {
-  getBoardCoordinatesFromPixelCoordinates,
-  getPixelCoordinatesFromBoardCoordinates
-} from "./gameBoardHelpers";
+import { getPixelCoordinatesFromBoardCoordinates } from "./gameBoardHelpers";
 import {
   DEBUG,
-  NUMBER_OF_COLS,
-  NUMBER_OF_ROWS,
   TRIANGLE_SIDE_LENGTH,
   TRIANGLE_HEIGHT,
   PLAYABLE_VERTICES,
   GAME_STATE_BOARD_CANVAS,
-  GamePieceRecord,
   TZAAR,
-  TOTT,
-  TZARRA,
-  NUMBER_OF_TOTTS,
-  NUMBER_OF_TZARRAS,
-  NUMBER_OF_TZAARS
+  TZARRA
 } from "./constants";
 import { drawCachedBoard } from "./cachedBoard";
-import { movingPiece, gameBoardState } from "./gameState";
+import { gameBoardState, setNewgameBoardState } from "./gameState";
+import { List } from "immutable";
 
 function getContext() {
   return GAME_STATE_BOARD_CANVAS.getContext("2d");
@@ -115,6 +106,72 @@ export function clearCanvas() {
 
 function timeFunction(t) {
   return --t * t * t + 1;
+}
+
+export function renderInitializingBoard(piecesToDraw, callback) {
+  let index = 0;
+  let piecesToRenderList = List();
+  piecesToDraw.forEach((piece, coordinate) => {
+    const to = getPixelCoordinatesFromBoardCoordinates(coordinate);
+    const from = `${window.innerWidth / 2},${window.innerHeight / 2}`;
+
+    piecesToRenderList = piecesToRenderList.push({
+      piece,
+      from,
+      to,
+      delay: index * 25
+    });
+
+    index = index + 1;
+  });
+
+  renderMovingPieces(piecesToRenderList, 500, Date.now(), () => {
+    let index = 0;
+    piecesToDraw.forEach((piece, coordinate) => {
+      setNewgameBoardState(gameBoardState.set(coordinate, piece));
+      index = index + 1;
+    });
+    callback();
+  });
+}
+
+function renderMovingPieces(piecesToRenderList, duration, startTime, callback) {
+  const now = Date.now();
+
+  const timePassedInMilliSec = now - startTime;
+
+  if (timePassedInMilliSec > duration + piecesToRenderList.last().delay) {
+    callback();
+    return;
+  }
+
+  clearCanvas();
+  drawCachedBoard();
+
+  piecesToRenderList.forEach(({ piece, from, to, delay }) => {
+    const timePassed = Math.min(
+      Math.max((now - startTime - delay) / duration, 0),
+      1
+    );
+
+    const [fromX, fromY] = from.split(",");
+    const [toX, toY] = to.split(",");
+
+    const distance = Math.sqrt(
+      Math.pow(fromX - toX, 2) + Math.pow(fromY - toY, 2)
+    );
+
+    const currentDistance = (timeFunction(timePassed) * distance) / distance;
+
+    const renderX = (1 - currentDistance) * fromX + currentDistance * toX;
+    const renderY = (1 - currentDistance) * fromY + currentDistance * toY;
+
+    drawGamePiece(piece, renderX, renderY);
+  });
+
+  window.requestAnimationFrame(() => {
+    renderMovingPieces(piecesToRenderList, duration, startTime, callback);
+  });
 }
 
 export function renderMovingPiece(

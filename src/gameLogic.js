@@ -17,7 +17,8 @@ import {
   drawCoordinates,
   drawGameBoardState,
   drawGamePiece,
-  renderMovingPiece
+  renderMovingPiece,
+  renderInitializingBoard
 } from "./renderHelpers";
 import {
   getBoardCoordinatesFromPixelCoordinates,
@@ -768,9 +769,11 @@ function getScoreForStacks(numberOfPieces, stackSize) {
 
 export function initGame() {
   drawInitialGrid();
-  setupBoardWithPieces();
-  drawGameBoardState();
-  drawCoordinates();
+  const piecesToSetup = setupBoardWithPieces();
+  renderInitializingBoard(piecesToSetup, () => {
+    drawGameBoardState();
+    drawCoordinates();
+  });
 }
 
 GAME_STATE_BOARD_CANVAS.addEventListener("mousedown", handleClickPiece);
