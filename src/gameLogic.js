@@ -131,8 +131,8 @@ function handleDropPiece({ x, y }) {
   drawGameBoardState();
 
   if (turnPhase === TURN_PHASES.CAPTURE && currentTurn === PLAYER_TWO) {
+    document.getElementById("loadingSpinner").classList.remove("hidden");
     setTimeout(() => moveAI(), 1);
-    // window.requestAnimationFrame(moveAI);
   }
 }
 
@@ -447,7 +447,7 @@ function getBestMove2(gameState, turn) {
     depth = 2;
   }
 
-  if (allPossibleStatesAfterTurn.size < 80) {
+  if (allPossibleStatesAfterTurn.size < 150) {
     depth = 1;
   }
 
@@ -460,6 +460,7 @@ function getBestMove2(gameState, turn) {
   // For every move AI makes, give minimax the state and let player one make its move...
   const scoresByMoveSeq = allPossibleStatesAfterTurn.reduce(
     (scoreMap, gameStateToCheck, moveSeq) => {
+      // debugger;
       scoreMap = scoreMap.set(
         moveSeq,
         minimax2(gameStateToCheck, PLAYER_ONE, depth)
@@ -471,9 +472,12 @@ function getBestMove2(gameState, turn) {
   );
 
   console.timeEnd("get scores");
-  debugger;
+  console.log(scoresByMoveSeq.toJS());
   const bestMove = scoresByMoveSeq.sort().reverse();
+  console.log(bestMove.toJS());
   const movesToMake = bestMove.keySeq().first();
+
+  document.getElementById("loadingSpinner").classList.add("hidden");
   return movesToMake;
 }
 
@@ -675,8 +679,18 @@ function minimax2(gameState, turn, depth) {
     let bestValue = Infinity;
 
     // choose lowest score after player two makes move
-    const gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_ONE);
 
+    const gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_ONE);
+    // const gameStateWithoutPlayerOneStacks = !gameState.find(
+    //   piece =>
+    //     piece &&
+    //     piece.get("ownedBy") === PLAYER_ONE &&
+    //     piece.get("stackSize") > 1
+    // );
+
+    // if (gameStateWithoutPlayerOneStacks) {
+    //   debugger;
+    // }
     gameStatesToAnalyze.forEach(nextGameState => {
       bestValue = Math.min(
         minimax2(nextGameState, PLAYER_TWO, depth - 1),
@@ -730,14 +744,19 @@ function getGameStateScore2(gameState) {
     if (!piece) {
       return piecesByPlayer;
     }
+
     const { ownedBy, type, stackSize } = piece;
     return piecesByPlayer
       .updateIn([ownedBy, type, "count"], count => count + 1)
       .updateIn(
         [ownedBy, type, "stacksGreaterThanOne"],
-        stacks => (stacks + Number(stackSize) === 1 ? 0 : 1)
+        stacks => stacks + (Number(stackSize) - 1)
       );
   }, scoringMapRecord);
+
+  // if (scoringMap.getIn([PLAYER_ONE, "TZAAR", "stacksGreaterThanOne"]) === 0) {
+  //   debugger;
+  // }
 
   let score = 0;
 
@@ -745,15 +764,22 @@ function getGameStateScore2(gameState) {
     score =
       score -
       data.get("count") * typeScores[pieceType] -
-      data.get("stacksGreaterThanOne") * typeScores[pieceType];
+      getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"), 5);
   });
   scoringMap.get(PLAYER_TWO).forEach((data, pieceType) => {
     score =
       score +
       data.get("count") * typeScores[pieceType] +
-      data.get("stacksGreaterThanOne") * typeScores[pieceType];
+      getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"), 1);
   });
   return score;
+}
+window.getGameStateScore2 = getGameStateScore2;
+// we value stacks depending on how many of that type are on the board
+function getScoreForStacks(numberOfPieces, stackSize, othermult) {
+  const MULTIPLIER = 15;
+  // console.log((MULTIPLIER - numberOfPieces) * stackSize * 2);
+  return (MULTIPLIER - numberOfPieces) * stackSize * othermult;
 }
 
 export function initGame() {
