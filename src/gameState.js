@@ -6,6 +6,7 @@ export let gameBoardState = Map();
 export let isVeryFirstTurn = true;
 export let currentTurn = PLAYER_ONE;
 export let turnPhase = TURN_PHASES.CAPTURE;
+export let numberOfTurnsIntoGame = 0;
 
 export function setNewgameBoardState(newState) {
   gameBoardState = newState;
@@ -21,7 +22,7 @@ export function nextPhase() {
     isVeryFirstTurn = false;
     turnPhase = TURN_PHASES.CAPTURE;
     currentTurn = PLAYER_TWO;
-
+    numberOfTurnsIntoGame = numberOfTurnsIntoGame + 1;
     document.getElementById("phaseDiv").innerHTML = "CAPTURE";
     document.getElementById("turnDiv").innerHTML = "AI";
 
@@ -47,6 +48,7 @@ export function nextPhase() {
   ) {
     turnPhase = TURN_PHASES.CAPTURE;
     currentTurn = PLAYER_TWO;
+    numberOfTurnsIntoGame = numberOfTurnsIntoGame + 1;
     document.getElementById("phaseDiv").innerHTML = "CAPTURE";
     document.getElementById("turnDiv").innerHTML = "AI";
     return;
@@ -57,6 +59,7 @@ export function nextPhase() {
   ) {
     turnPhase = TURN_PHASES.CAPTURE;
     currentTurn = PLAYER_ONE;
+    numberOfTurnsIntoGame = numberOfTurnsIntoGame + 1;
     document.getElementById("phaseDiv").innerHTML = "CAPTURE";
     document.getElementById("turnDiv").innerHTML = "PLAYER";
     return;

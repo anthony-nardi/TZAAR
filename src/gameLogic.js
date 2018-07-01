@@ -1,13 +1,7 @@
-import { List, Map, fromJS } from "immutable";
+import { List, Map } from "immutable";
 import {
   DEBUG,
-  NUMBER_OF_COLS,
-  NUMBER_OF_ROWS,
-  TRIANGLE_SIDE_LENGTH,
-  TRIANGLE_HEIGHT,
-  PLAYABLE_VERTICES,
   GAME_STATE_BOARD_CANVAS,
-  GamePieceRecord,
   TZAAR,
   TOTT,
   TZARRA,
@@ -18,14 +12,11 @@ import {
   PLAYER_TWO,
   TURN_PHASES
 } from "./constants";
-import { drawCachedBoard, drawInitialGrid } from "./cachedBoard";
+import { drawInitialGrid } from "./cachedBoard";
 import {
-  drawCoordinate,
   drawCoordinates,
   drawGameBoardState,
   drawGamePiece,
-  drawGamePieces,
-  clearCanvas,
   renderMovingPiece
 } from "./renderHelpers";
 import {
@@ -51,7 +42,8 @@ import {
   setMovingPiece,
   nextPhase,
   currentTurn,
-  turnPhase
+  turnPhase,
+  numberOfTurnsIntoGame
 } from "./gameState";
 
 function isCurrentPlayerPiece(boardCoordinate) {
@@ -98,7 +90,7 @@ function handleDropPiece({ x, y }) {
     return;
   }
 
-  const validCaptures = getValidCaptures(movingPiece);
+  const validCaptures = getValidCaptures(movingPiece, gameBoardState);
   const isValidCapture = validCaptures.includes(toPieceBoardCoordinates);
   const pieceToMove = gameBoardState.get(movingPiece);
 
@@ -110,7 +102,7 @@ function handleDropPiece({ x, y }) {
     );
     checkGameStateAndStartNextTurn();
   } else if (turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
-    const validStacks = getValidStacks(movingPiece);
+    const validStacks = getValidStacks(movingPiece, gameBoardState);
     if (isValidCapture) {
       setNewgameBoardState(
         gameBoardState
@@ -139,7 +131,8 @@ function handleDropPiece({ x, y }) {
   drawGameBoardState();
 
   if (turnPhase === TURN_PHASES.CAPTURE && currentTurn === PLAYER_TWO) {
-    moveAI();
+    document.getElementById("loadingSpinner").classList.remove("hidden");
+    setTimeout(() => moveAI(), 1);
   }
 }
 
@@ -159,75 +152,79 @@ function moveAI() {
     return;
   }
 
-  let highestScore = -Infinity;
-  let moveToMake = null;
-  const bestMoves = getBestMove();
+  const bestMove = getBestMove(gameBoardState, PLAYER_TWO);
 
-  if (!bestMoves && turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
+  if (!bestMove && turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
     checkGameStateAndStartNextTurn();
     return;
   }
 
-  const bestMove = bestMoves.forEach((val, key) => {
-    if (val > highestScore) {
-      moveToMake = key;
-      highestScore = val;
-    }
-  });
+  const [firstMove, secondMove] = bestMove.split("=>");
+  const [firstFromCoordinate, firstToCoordinate] = firstMove.split("->");
+  const [secondFromCoordinate, secondToCoordinate] = secondMove.split("->");
+  const fromPiece = gameBoardState.get(firstFromCoordinate);
 
-  const [fromCoordinate, toCoordinate] = moveToMake.split("->");
-  const fromPiece = gameBoardState.get(fromCoordinate);
-  setNewgameBoardState(gameBoardState.set(fromCoordinate, false));
-
-  const fromPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
-    fromCoordinate
+  // dont render moving piece in the same spot...
+  setNewgameBoardState(gameBoardState.set(firstFromCoordinate, false));
+  const fromFirstPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
+    firstFromCoordinate
   );
-  const toPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
-    toCoordinate
+  const toFirstPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
+    firstToCoordinate
   );
 
-  DEBUG && console.log(`MOVING FROM ${fromCoordinate} TO ${toCoordinate}`);
+  const fromSecondPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
+    secondFromCoordinate
+  );
+  const toSecondPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
+    secondToCoordinate
+  );
+
+  DEBUG &&
+    console.log(`MOVING FROM ${firstFromCoordinate} TO ${firstToCoordinate}`);
 
   renderMovingPiece(
     fromPiece,
-    fromPixelCoodinate,
-    toPixelCoordinate,
+    fromFirstPixelCoodinate,
+    toFirstPixelCoordinate,
     2000,
     Date.now(),
     () => {
-      if (turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
-        const toPiece = gameBoardState.get(toCoordinate);
-
-        setNewgameBoardState(
-          gameBoardState
-            .set(toCoordinate, fromPiece)
-            .setIn(
-              [toCoordinate, "stackSize"],
-              fromPiece.stackSize + toPiece.stackSize
-            )
-        );
-      } else {
-        setNewgameBoardState(gameBoardState.set(toCoordinate, fromPiece));
-      }
-
+      setNewgameBoardState(gameBoardState.set(firstToCoordinate, fromPiece));
       checkGameStateAndStartNextTurn();
       drawGameBoardState();
 
-      if (
-        turnPhase === TURN_PHASES.STACK_OR_CAPTURE &&
-        currentTurn === PLAYER_TWO
-      ) {
-        moveAI();
-      }
+      const secondFromPiece = gameBoardState.get(secondFromCoordinate);
+      setNewgameBoardState(gameBoardState.set(secondFromCoordinate, false));
+
+      DEBUG &&
+        console.log(
+          `MOVING FROM ${secondFromCoordinate} TO ${secondToCoordinate}`
+        );
+
+      renderMovingPiece(
+        secondFromPiece,
+        fromSecondPixelCoodinate,
+        toSecondPixelCoordinate,
+        2000,
+        Date.now(),
+        () => {
+          const toPiece = gameBoardState.get(secondToCoordinate);
+
+          setNewgameBoardState(
+            gameBoardState
+              .set(secondToCoordinate, secondFromPiece)
+              .setIn(
+                [secondToCoordinate, "stackSize"],
+                secondFromPiece.stackSize + toPiece.stackSize
+              )
+          );
+          checkGameStateAndStartNextTurn();
+          drawGameBoardState();
+        }
+      );
     }
   );
-}
-
-export function initGame() {
-  drawInitialGrid();
-  setupBoardWithPieces();
-  drawGameBoardState();
-  drawCoordinates();
 }
 
 const nextPiece = {
@@ -239,7 +236,35 @@ const nextPiece = {
   se: goSouthEast
 };
 
-function getNextValidCapture(fromCoordinate, direction) {
+function getNextInvertedValidCapture(toCoordinate, direction, gameState) {
+  let nextMove;
+  let coordinateToCheck = toCoordinate;
+  while (nextMove === undefined) {
+    coordinateToCheck = nextPiece[direction](coordinateToCheck);
+
+    // Not a space that we can play on
+    if (!isPlayableSpace(coordinateToCheck)) {
+      nextMove = false;
+    }
+
+    // This space is empty so we can continue
+    else if (isValidEmptyCoordinate(coordinateToCheck, gameState)) {
+      nextMove = undefined;
+    }
+
+    // First piece we encounter can't be captured
+    else if (!canCapture(coordinateToCheck, toCoordinate, gameState)) {
+      nextMove = false;
+    }
+    // Finally a piece we can capture
+    else {
+      nextMove = coordinateToCheck;
+    }
+  }
+  return nextMove;
+}
+
+function getNextValidCapture(fromCoordinate, direction, gameState) {
   let nextMove;
   let coordinateToCheck = fromCoordinate;
   while (nextMove === undefined) {
@@ -251,12 +276,12 @@ function getNextValidCapture(fromCoordinate, direction) {
     }
 
     // This space is empty so we can continue
-    else if (isValidEmptyCoordinate(coordinateToCheck)) {
+    else if (isValidEmptyCoordinate(coordinateToCheck, gameState)) {
       nextMove = undefined;
     }
 
     // First piece we encounter can't be captured
-    else if (!canCapture(fromCoordinate, coordinateToCheck)) {
+    else if (!canCapture(fromCoordinate, coordinateToCheck, gameState)) {
       nextMove = false;
     }
     // Finally a piece we can capture
@@ -267,7 +292,7 @@ function getNextValidCapture(fromCoordinate, direction) {
   return nextMove;
 }
 
-function getNextValidStack(fromCoordinate, direction) {
+function getNextValidStack(fromCoordinate, direction, gameState) {
   let nextMove;
   let coordinateToCheck = fromCoordinate;
   while (nextMove === undefined) {
@@ -279,12 +304,12 @@ function getNextValidStack(fromCoordinate, direction) {
     }
 
     // This space is empty so we can continue
-    else if (isValidEmptyCoordinate(coordinateToCheck)) {
+    else if (isValidEmptyCoordinate(coordinateToCheck, gameState)) {
       nextMove = undefined;
     }
 
     // First piece we encounter can't be captured
-    else if (!canStack(fromCoordinate, coordinateToCheck)) {
+    else if (!canStack(fromCoordinate, coordinateToCheck, gameState)) {
       nextMove = false;
     }
     // Finally a piece we can capture
@@ -295,25 +320,25 @@ function getNextValidStack(fromCoordinate, direction) {
   return nextMove;
 }
 
-function getValidCaptures(fromCoordinate) {
+function getValidCaptures(fromCoordinate, gameState) {
   return List([
-    getNextValidCapture(fromCoordinate, "w"),
-    getNextValidCapture(fromCoordinate, "e"),
-    getNextValidCapture(fromCoordinate, "nw"),
-    getNextValidCapture(fromCoordinate, "ne"),
-    getNextValidCapture(fromCoordinate, "sw"),
-    getNextValidCapture(fromCoordinate, "se")
+    getNextValidCapture(fromCoordinate, "w", gameState),
+    getNextValidCapture(fromCoordinate, "e", gameState),
+    getNextValidCapture(fromCoordinate, "nw", gameState),
+    getNextValidCapture(fromCoordinate, "ne", gameState),
+    getNextValidCapture(fromCoordinate, "sw", gameState),
+    getNextValidCapture(fromCoordinate, "se", gameState)
   ]).filter(isValidMove => isValidMove);
 }
 
-function getValidStacks(fromCoordinate) {
+function getValidStacks(fromCoordinate, gameState) {
   return List([
-    getNextValidStack(fromCoordinate, "w"),
-    getNextValidStack(fromCoordinate, "e"),
-    getNextValidStack(fromCoordinate, "nw"),
-    getNextValidStack(fromCoordinate, "ne"),
-    getNextValidStack(fromCoordinate, "sw"),
-    getNextValidStack(fromCoordinate, "se")
+    getNextValidStack(fromCoordinate, "w", gameState),
+    getNextValidStack(fromCoordinate, "e", gameState),
+    getNextValidStack(fromCoordinate, "nw", gameState),
+    getNextValidStack(fromCoordinate, "ne", gameState),
+    getNextValidStack(fromCoordinate, "sw", gameState),
+    getNextValidStack(fromCoordinate, "se", gameState)
   ]).filter(isValidMove => isValidMove);
 }
 
@@ -328,23 +353,29 @@ function getPieces(gameState) {
         pieces.push(piece)
       );
     },
-    fromJS({
-      [PLAYER_ONE]: {
+    Map({
+      [PLAYER_ONE]: Map({
         [TOTT]: List(),
         [TZARRA]: List(),
         [TZAAR]: List()
-      },
-      [PLAYER_TWO]: {
+      }),
+      [PLAYER_TWO]: Map({
         [TOTT]: List(),
         [TZARRA]: List(),
         [TZAAR]: List()
-      }
+      })
     })
   );
 }
 
-function getAllPlayerPieceCoordinates(gamestate, player) {
-  return gameBoardState.filter(({ ownedBy }) => ownedBy === player).keySeq();
+function getAllPlayerPieceCoordinates(gameState, player) {
+  return gameState.filter(piece => piece && piece.ownedBy === player).keySeq();
+}
+
+function getAllPlayerPieceCoordinatesByType(gameState, player, type) {
+  return gameState
+    .filter(piece => piece && piece.ownedBy === player && piece.type === type)
+    .keySeq();
 }
 
 function getWinner(gameState) {
@@ -371,7 +402,7 @@ function getWinner(gameState) {
     gameState,
     currentTurn
   ).reduce((list, fromCoordinate) => {
-    return list.concat(getValidCaptures(fromCoordinate));
+    return list.concat(getValidCaptures(fromCoordinate, gameState));
   }, List());
 
   if (!possibleCaptures.size) {
@@ -379,81 +410,240 @@ function getWinner(gameState) {
   }
 }
 
-function getBestStack() {
-  const allPlayerPieces = getAllPlayerPieceCoordinates(
-    gameBoardState,
-    PLAYER_TWO
+function getGameStatesToAnalyze(gameState, turn) {
+  const EARLY_GAME = numberOfTurnsIntoGame < 10;
+
+  let allPossibleStatesAfterTurn = EARLY_GAME
+    ? getEarlyGamePossibleMoveSequences(gameState, TZAAR, turn)
+    : getPossibleMoveSequences(gameState, turn);
+
+  if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
+    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
+      gameState,
+      TZARRA,
+      turn
+    );
+  }
+
+  if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
+    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
+      gameState,
+      TOTT,
+      turn
+    );
+  }
+
+  return allPossibleStatesAfterTurn;
+}
+
+function getBestMove(gameState, turn) {
+  DEBUG && console.time("all game states");
+
+  const allPossibleStatesAfterTurn = getGameStatesToAnalyze(gameState, turn);
+
+  let depth = 0;
+
+  if (allPossibleStatesAfterTurn.size < 20) {
+    depth = 2;
+  }
+
+  if (allPossibleStatesAfterTurn.size < 150) {
+    depth = 1;
+  }
+
+  DEBUG && console.timeEnd("all game states");
+  DEBUG &&
+    console.log(
+      `ALL POSSIBLE GAME STATES AT DEPTH 0: ${allPossibleStatesAfterTurn.size}`
+    );
+
+  // For every move AI makes, give minimax the state and let player one make its move...
+  const scoresByMoveSeq = allPossibleStatesAfterTurn.reduce(
+    (scoreMap, gameStateToCheck, moveSeq) => {
+      scoreMap = scoreMap.set(
+        moveSeq,
+        minimax(gameStateToCheck, PLAYER_ONE, depth)
+      );
+
+      return scoreMap;
+    },
+    Map()
   );
-  DEBUG && console.log(`All player pieces: ${allPlayerPieces}`);
-  return allPlayerPieces.reduce((map, fromCoordinate) => {
-    const validStacks = getValidStacks(fromCoordinate);
-    DEBUG && console.log(`evaluating stacks: ${validStacks.size}`);
-    const bestMove = validStacks.reduce((scoresByMove, toCoordinate) => {
-      const fromPiece = gameBoardState.get(fromCoordinate);
-      const toPiece = gameBoardState.get(toCoordinate);
-      const nextGameState = gameBoardState
-        .set(fromCoordinate, null)
-        .set(toCoordinate, fromPiece)
-        .setIn(
-          [toCoordinate, "stackSize"],
-          fromPiece.stackSize + toPiece.stackSize
+
+  DEBUG && console.timeEnd("get scores");
+
+  const bestMove = scoresByMoveSeq.sort().reverse();
+  const movesToMake = bestMove.keySeq().first();
+
+  document.getElementById("loadingSpinner").classList.add("hidden");
+  return movesToMake;
+}
+
+function getInvertedValidCaptures(toCoordinate, gameState) {
+  return List([
+    getNextInvertedValidCapture(toCoordinate, "w", gameState),
+    getNextInvertedValidCapture(toCoordinate, "e", gameState),
+    getNextInvertedValidCapture(toCoordinate, "nw", gameState),
+    getNextInvertedValidCapture(toCoordinate, "ne", gameState),
+    getNextInvertedValidCapture(toCoordinate, "sw", gameState),
+    getNextInvertedValidCapture(toCoordinate, "se", gameState)
+  ]).filter(isValidMove => isValidMove);
+}
+
+function getEarlyGamePossibleMoveSequences(gameState, PIECE_TYPE, turn) {
+  const playerPiecesToCapture = turn === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+
+  // get opponents most valuable pieces to capture.
+  const allPlayerPieces = getAllPlayerPieceCoordinatesByType(
+    gameState,
+    playerPiecesToCapture,
+    PIECE_TYPE
+  );
+
+  return allPlayerPieces.reduce((allGameStatesAfterMoveSeq, toCoordinate) => {
+    const validCaptures = getInvertedValidCaptures(toCoordinate, gameState);
+
+    // For every piece, get all possible captures
+    // for each and put the resulting game state into a list.
+    const allCaptureStates = validCaptures.reduce(
+      (statesAfterCapture, fromCoordinate) => {
+        const fromPiece = gameState.get(fromCoordinate);
+        const nextGameState = gameState
+          .set(fromCoordinate, null)
+          .set(toCoordinate, fromPiece);
+        return statesAfterCapture.set(
+          `${fromCoordinate}->${toCoordinate}`,
+          nextGameState
         );
-      const minimaxResult = minimax(nextGameState, turnPhase, PLAYER_TWO, 0);
-      return scoresByMove.set(
-        `${fromCoordinate}->${toCoordinate}`,
-        minimaxResult
-      );
-    }, Map());
+      },
+      Map()
+    );
 
-    const sortedMoves = bestMove.sort().reverse();
-    DEBUG && console.log(sortedMoves.toJS());
-    const fromToKey = sortedMoves.keySeq().first();
-    const score = sortedMoves.first();
-    return map.set(fromToKey, score);
+    // For every game state resulting from the above process,
+    // get all player pieces and return all game states
+    // for every valid stack you can make
+    allCaptureStates.forEach((stateAfterCapture, fromToKey) => {
+      let allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
+        stateAfterCapture,
+        turn,
+        TZAAR
+      );
+
+      if (!allPlayerPiecesAfterCapture.size) {
+        allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
+          stateAfterCapture,
+          turn,
+          TZARRA
+        );
+      }
+      if (!allPlayerPiecesAfterCapture.size) {
+        allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
+          stateAfterCapture,
+          turn,
+          TOTT
+        );
+      }
+
+      allPlayerPiecesAfterCapture.forEach(playerPieceCoordinateAfterCapture => {
+        const validStacks = getValidStacks(
+          playerPieceCoordinateAfterCapture,
+          stateAfterCapture
+        );
+
+        const fromPiece = stateAfterCapture.get(
+          playerPieceCoordinateAfterCapture
+        );
+        validStacks.forEach(toCoordinate => {
+          const toPiece = stateAfterCapture.get(toCoordinate);
+
+          const gameStateAfterMoveSeq = stateAfterCapture
+            .set(playerPieceCoordinateAfterCapture, null)
+            .set(toCoordinate, fromPiece)
+            .setIn(
+              [toCoordinate, "stackSize"],
+              fromPiece.stackSize + toPiece.stackSize
+            );
+
+          const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
+
+          allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+            sequenceKey,
+            gameStateAfterMoveSeq
+          );
+        });
+      });
+    });
+
+    return allGameStatesAfterMoveSeq;
   }, Map());
 }
 
-function getBestCapture() {
-  const allPlayerPieces = getAllPlayerPieceCoordinates(
-    gameBoardState,
-    PLAYER_TWO
-  );
+function getPossibleMoveSequences(gameState) {
+  const allPlayerPieces = getAllPlayerPieceCoordinates(gameState, PLAYER_TWO);
 
-  return allPlayerPieces.reduce((map, fromCoordinate) => {
-    const validCaptures = getValidCaptures(fromCoordinate);
-    DEBUG && console.log(`evaluating captures: ${validCaptures.size}`);
-    const bestMove = validCaptures.reduce((scoresByMove, toCoordinate) => {
-      const fromPiece = gameBoardState.get(fromCoordinate);
-      const nextGameState = gameBoardState
-        .set(fromCoordinate, null)
-        .set(toCoordinate, fromPiece);
-      const minimaxResult = minimax(nextGameState, turnPhase, PLAYER_TWO, 0);
-      return scoresByMove.set(
-        `${fromCoordinate}->${toCoordinate}`,
-        minimaxResult
+  return allPlayerPieces.reduce((allGameStatesAfterMoveSeq, fromCoordinate) => {
+    const validCaptures = getValidCaptures(fromCoordinate, gameState);
+
+    // For every piece, get all possible captures
+    // for each and put the resulting game state into a list.
+    const allCaptureStates = validCaptures.reduce(
+      (statesAfterCapture, toCoordinate) => {
+        const fromPiece = gameState.get(fromCoordinate);
+        const nextGameState = gameState
+          .set(fromCoordinate, null)
+          .set(toCoordinate, fromPiece);
+        return statesAfterCapture.set(
+          `${fromCoordinate}->${toCoordinate}`,
+          nextGameState
+        );
+      },
+      Map()
+    );
+
+    // For every game state resulting from the above process,
+    // get all player pieces and return all game states
+    // for every valid stack you can make
+    allCaptureStates.forEach((stateAfterCapture, fromToKey) => {
+      const allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinates(
+        stateAfterCapture,
+        PLAYER_TWO
       );
-    }, Map());
 
-    const sortedMoves = bestMove.sort().reverse();
+      allPlayerPiecesAfterCapture.forEach(playerPieceCoordinateAfterCapture => {
+        const validStacks = getValidStacks(
+          playerPieceCoordinateAfterCapture,
+          stateAfterCapture
+        );
 
-    const fromToKey = sortedMoves.keySeq().first();
-    const score = sortedMoves.first();
-    return map.set(fromToKey, score);
+        const fromPiece = stateAfterCapture.get(
+          playerPieceCoordinateAfterCapture
+        );
+        validStacks.forEach(toCoordinate => {
+          const toPiece = stateAfterCapture.get(toCoordinate);
+
+          const gameStateAfterMoveSeq = stateAfterCapture
+            .set(playerPieceCoordinateAfterCapture, null)
+            .set(toCoordinate, fromPiece)
+            .setIn(
+              [toCoordinate, "stackSize"],
+              fromPiece.stackSize + toPiece.stackSize
+            );
+
+          const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
+
+          allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+            sequenceKey,
+            gameStateAfterMoveSeq
+          );
+        });
+      });
+    });
+
+    return allGameStatesAfterMoveSeq;
   }, Map());
 }
 
-function getBestMove() {
-  if (turnPhase === TURN_PHASES.CAPTURE) {
-    return getBestCapture();
-  }
-  const bestStack = getBestStack().filter(move => move);
-
-  if (bestStack && bestStack.size) {
-    return bestStack;
-  }
-}
-
-function minimax(gameState, phase, turn, depth) {
+function minimax(gameState, turn, depth) {
   const winner = getWinner(gameState);
   if (winner === PLAYER_ONE) {
     return -Infinity;
@@ -463,121 +653,124 @@ function minimax(gameState, phase, turn, depth) {
   }
 
   if (depth === 0) {
-    DEBUG && console.log(`eval ${turn}`);
-    return getGameStateScore(gameState, turn, phase);
+    return getGameStateScore2(gameState);
   }
-  debugger;
+
   // maximizing player
   if (turn === PLAYER_TWO) {
     let bestValue = -Infinity;
 
-    const gameStatesToCheck = getAllPlayerPieceCoordinates(
-      gameState,
-      PLAYER_TWO
-    ).reduce((list, fromCoordinate) => {
-      const fromPiece = gameState.get(fromCoordinate);
-      const validCaptures = getValidCaptures(fromCoordinate).forEach(
-        toCoordinate => {
-          const nextGameState = gameState
-            .set(toCoordinate, fromPiece)
-            .set(fromCoordinate, null);
-
-          list = list.push(nextGameState);
-        }
+    // choose max score after player one makes his move
+    const gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_TWO);
+    gameStatesToAnalyze.forEach(nextGameState => {
+      bestValue = Math.max(
+        minimax(nextGameState, PLAYER_ONE, depth - 1),
+        bestValue
       );
-      return list;
-    }, List());
-
-    DEBUG &&
-      console.log(
-        `depth: ${depth} - checking game states: ${gameStatesToCheck.size}`
-      );
-
-    gameStatesToCheck.forEach(nextGameState => {
-      let maybeBetterValue = minimax(
-        nextGameState,
-        phase,
-        PLAYER_ONE,
-        depth - 1
-      );
-      bestValue = Math.max(maybeBetterValue, bestValue);
     });
+
     return bestValue;
   }
 
   // minimizing player
   if (turn === PLAYER_ONE) {
     let bestValue = Infinity;
-    const gameStatesToCheck = getAllPlayerPieceCoordinates(
-      gameState,
-      PLAYER_ONE
-    ).reduce((list, fromCoordinate) => {
-      const fromPiece = gameState.get(fromCoordinate);
-      const validCaptures = getValidCaptures(fromCoordinate).forEach(
-        toCoordinate => {
-          const nextGameState = gameState
-            .set(toCoordinate, fromPiece)
-            .set(fromCoordinate, null);
-          list = list.push(nextGameState);
-        }
-      );
-      return list;
-    }, List());
 
-    gameStatesToCheck.forEach(nextGameState => {
-      let maybeBetterValue = minimax(
-        nextGameState,
-        phase,
-        PLAYER_TWO,
-        depth - 1
+    // choose lowest score after player two makes move
+    const gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_ONE);
+
+    gameStatesToAnalyze.forEach(nextGameState => {
+      bestValue = Math.min(
+        minimax(nextGameState, PLAYER_TWO, depth - 1),
+        bestValue
       );
-      bestValue = Math.min(maybeBetterValue, bestValue);
     });
+
     return bestValue;
   }
 }
 
-function getGameStateScore(gameState, turn) {
-  const HIGHEST_SCORE_POSSIBLE = 90;
-  const typeScores = {
-    [TOTT]: 30 / NUMBER_OF_TOTTS,
-    [TZARRA]: 30 / NUMBER_OF_TZARRAS,
-    [TZAAR]: 30 / NUMBER_OF_TZAARS
-  };
-  const pieces = getPieces(gameState);
+const typeScores = {
+  [TOTT]: 30 / NUMBER_OF_TOTTS,
+  [TZARRA]: 30 / NUMBER_OF_TZARRAS,
+  [TZAAR]: 30 / NUMBER_OF_TZAARS
+};
+
+const scoringMapRecord = Map({
+  [PLAYER_ONE]: Map({
+    [TOTT]: Map({
+      count: 0,
+      stacksGreaterThanOne: 0
+    }),
+    [TZARRA]: Map({
+      count: 0,
+      stacksGreaterThanOne: 0
+    }),
+    [TZAAR]: Map({
+      count: 0,
+      stacksGreaterThanOne: 0
+    })
+  }),
+  [PLAYER_TWO]: Map({
+    [TOTT]: Map({
+      count: 0,
+      stacksGreaterThanOne: 0
+    }),
+    [TZARRA]: Map({
+      count: 0,
+      stacksGreaterThanOne: 0
+    }),
+    [TZAAR]: Map({
+      count: 0,
+      stacksGreaterThanOne: 0
+    })
+  })
+});
+
+function getGameStateScore2(gameState) {
+  const scoringMap = gameState.reduce((piecesByPlayer, piece) => {
+    if (!piece) {
+      return piecesByPlayer;
+    }
+
+    const { ownedBy, type, stackSize } = piece;
+    return piecesByPlayer
+      .updateIn([ownedBy, type, "count"], count => count + 1)
+      .updateIn(
+        [ownedBy, type, "stacksGreaterThanOne"],
+        stacks => stacks + (Number(stackSize) - 1)
+      );
+  }, scoringMapRecord);
 
   let score = 0;
 
-  if (turn === PLAYER_ONE) {
+  scoringMap.get(PLAYER_ONE).forEach((data, pieceType) => {
     score =
-      HIGHEST_SCORE_POSSIBLE -
-      pieces.get(PLAYER_TWO).reduce((playerScore, pieces, type) => {
-        return playerScore + pieces.size * typeScores[type];
-      }, 0) +
-      getScoreForStacks(pieces, PLAYER_ONE);
-  } else {
+      score -
+      data.get("count") * typeScores[pieceType] -
+      getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
+  });
+  scoringMap.get(PLAYER_TWO).forEach((data, pieceType) => {
     score =
-      HIGHEST_SCORE_POSSIBLE -
-      pieces.get(PLAYER_ONE).reduce((playerScore, pieces, type) => {
-        return playerScore + pieces.size * typeScores[type];
-      }, 0) +
-      getScoreForStacks(pieces, PLAYER_TWO);
-  }
-
+      score +
+      data.get("count") * typeScores[pieceType] +
+      getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
+  });
   return score;
 }
 
 // we value stacks depending on how many of that type are on the board
-function getScoreForStacks(playerPieces, player) {
+function getScoreForStacks(numberOfPieces, stackSize) {
   const MULTIPLIER = 15;
 
-  return playerPieces.get(player).reduce((total, pieces) => {
-    const totalPieces = pieces.size;
-    pieces.forEach(piece => {
-      total = total + (MULTIPLIER - totalPieces) * piece.stackSize;
-    });
-    return total;
-  }, 0);
+  return (MULTIPLIER - numberOfPieces) * stackSize;
+}
+
+export function initGame() {
+  drawInitialGrid();
+  setupBoardWithPieces();
+  drawGameBoardState();
+  drawCoordinates();
 }
 
 GAME_STATE_BOARD_CANVAS.addEventListener("mousedown", handleClickPiece);

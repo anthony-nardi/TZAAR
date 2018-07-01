@@ -1,11 +1,7 @@
 import {
-  DEBUG,
-  NUMBER_OF_COLS,
-  NUMBER_OF_ROWS,
   TRIANGLE_SIDE_LENGTH,
   TRIANGLE_HEIGHT,
   PLAYABLE_VERTICES,
-  GAME_STATE_BOARD_CANVAS,
   GamePieceRecord,
   TZAAR,
   TOTT,
@@ -15,15 +11,7 @@ import {
   NUMBER_OF_TZAARS
 } from "./constants";
 import { List } from "immutable";
-import {
-  movingPiece,
-  gameBoardState,
-  setNewgameBoardState,
-  setMovingPiece,
-  nextPhase,
-  currentTurn,
-  turnPhase
-} from "./gameState";
+import { gameBoardState, setNewgameBoardState } from "./gameState";
 
 export function getPixelCoordinatesFromBoardCoordinates(coordinate) {
   const [x, y] = coordinate.split(",");
@@ -157,9 +145,9 @@ export function setupBoardWithPieces() {
   });
 }
 
-export function canCapture(fromCoordinate, toCoordinate) {
-  const fromPiece = gameBoardState.get(fromCoordinate);
-  const toPiece = gameBoardState.get(toCoordinate);
+export function canCapture(fromCoordinate, toCoordinate, gameState) {
+  const fromPiece = gameState.get(fromCoordinate);
+  const toPiece = gameState.get(toCoordinate);
 
   return (
     fromPiece.ownedBy !== toPiece.ownedBy &&
@@ -167,15 +155,15 @@ export function canCapture(fromCoordinate, toCoordinate) {
   );
 }
 
-export function canStack(fromCoordinate, toCoordinate) {
-  const fromPiece = gameBoardState.get(fromCoordinate);
-  const toPiece = gameBoardState.get(toCoordinate);
+export function canStack(fromCoordinate, toCoordinate, gameState) {
+  const fromPiece = gameState.get(fromCoordinate);
+  const toPiece = gameState.get(toCoordinate);
 
   return fromPiece.ownedBy === toPiece.ownedBy;
 }
 
-export function isValidEmptyCoordinate(coordinate) {
+export function isValidEmptyCoordinate(coordinate, gameState) {
   return Boolean(
-    PLAYABLE_VERTICES.includes(coordinate) && !gameBoardState.get(coordinate)
+    PLAYABLE_VERTICES.includes(coordinate) && !gameState.get(coordinate)
   );
 }
