@@ -10,8 +10,7 @@ import {
   NUMBER_OF_TZARRAS,
   NUMBER_OF_TZAARS
 } from "./constants";
-import { List } from "immutable";
-import { gameBoardState, setNewgameBoardState } from "./gameState";
+import { List, Map } from "immutable";
 
 export function getPixelCoordinatesFromBoardCoordinates(coordinate) {
   const [x, y] = coordinate.split(",");
@@ -107,6 +106,7 @@ export function isPlayableSpace(coordinate) {
 }
 
 export function setupBoardWithPieces() {
+  let piecesToDraw = Map();
   let PLAYER_ONE_PIECES = List();
   let PLAYER_TWO_PIECES = List();
 
@@ -141,8 +141,10 @@ export function setupBoardWithPieces() {
   const shuffledPieces = allGamePieces.sortBy(Math.random);
 
   shuffledPieces.forEach((piece, index) => {
-    setNewgameBoardState(gameBoardState.set(PLAYABLE_VERTICES[index], piece));
+    piecesToDraw = piecesToDraw.set(PLAYABLE_VERTICES[index], piece);
+    // setNewgameBoardState(gameBoardState.set(PLAYABLE_VERTICES[index], piece));
   });
+  return piecesToDraw;
 }
 
 export function canCapture(fromCoordinate, toCoordinate, gameState) {
