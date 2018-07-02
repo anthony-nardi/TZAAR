@@ -54,7 +54,9 @@ function isCurrentPlayerPiece(boardCoordinate) {
   );
 }
 
-function handleClickPiece({ x, y }) {
+function handleClickPiece(event) {
+  const x = event.x || event.offsetX || event.changedTouches[0].clientX;
+  const y = event.y || event.offsetY || event.changedTouches[0].clientY;
   const boardCoordinate = getBoardCoordinatesFromPixelCoordinates(x, y);
 
   if (!isCurrentPlayerPiece(boardCoordinate)) {
@@ -67,7 +69,9 @@ function handleClickPiece({ x, y }) {
   setMovingPiece(boardCoordinate);
 }
 
-function handleMovePiece({ x, y }) {
+function handleMovePiece(event) {
+  const x = event.x || event.offsetX || event.changedTouches[0].clientX;
+  const y = event.y || event.offsetY || event.changedTouches[0].clientY;
   if (!movingPiece) {
     return;
   }
@@ -75,7 +79,9 @@ function handleMovePiece({ x, y }) {
   drawGamePiece(gameBoardState.get(movingPiece), x, y);
 }
 
-function handleDropPiece({ x, y }) {
+function handleDropPiece(event) {
+  const x = event.x || event.offsetX || event.changedTouches[0].clientX;
+  const y = event.y || event.offsetY || event.changedTouches[0].clientY;
   if (!movingPiece) {
     return;
   }
