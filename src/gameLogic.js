@@ -544,6 +544,10 @@ function getEarlyGamePossibleMoveSequences(gameState, PIECE_TYPE, turn) {
           TOTT
         );
       }
+      if (!allPlayerPiecesAfterCapture.size) {
+        console.log("halloo");
+        debugger;
+      }
 
       allPlayerPiecesAfterCapture.forEach(playerPieceCoordinateAfterCapture => {
         const validStacks = getValidStacks(
@@ -579,8 +583,8 @@ function getEarlyGamePossibleMoveSequences(gameState, PIECE_TYPE, turn) {
   }, Map());
 }
 
-function getPossibleMoveSequences(gameState) {
-  const allPlayerPieces = getAllPlayerPieceCoordinates(gameState, PLAYER_TWO);
+function getPossibleMoveSequences(gameState, turn) {
+  const allPlayerPieces = getAllPlayerPieceCoordinates(gameState, turn);
 
   return allPlayerPieces.reduce((allGameStatesAfterMoveSeq, fromCoordinate) => {
     const validCaptures = getValidCaptures(fromCoordinate, gameState);
@@ -607,7 +611,7 @@ function getPossibleMoveSequences(gameState) {
     allCaptureStates.forEach((stateAfterCapture, fromToKey) => {
       const allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinates(
         stateAfterCapture,
-        PLAYER_TWO
+        turn
       );
 
       allPlayerPiecesAfterCapture.forEach(playerPieceCoordinateAfterCapture => {
@@ -619,24 +623,45 @@ function getPossibleMoveSequences(gameState) {
         const fromPiece = stateAfterCapture.get(
           playerPieceCoordinateAfterCapture
         );
-        validStacks.forEach(toCoordinate => {
-          const toPiece = stateAfterCapture.get(toCoordinate);
 
-          const gameStateAfterMoveSeq = stateAfterCapture
-            .set(playerPieceCoordinateAfterCapture, null)
-            .set(toCoordinate, fromPiece)
-            .setIn(
-              [toCoordinate, "stackSize"],
-              fromPiece.stackSize + toPiece.stackSize
+        if (validStacks && validStacks.size) {
+          validStacks.forEach(toCoordinate => {
+            const toPiece = stateAfterCapture.get(toCoordinate);
+
+            const gameStateAfterMoveSeq = stateAfterCapture
+              .set(playerPieceCoordinateAfterCapture, null)
+              .set(toCoordinate, fromPiece)
+              .setIn(
+                [toCoordinate, "stackSize"],
+                fromPiece.stackSize + toPiece.stackSize
+              );
+
+            const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
+
+            allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+              sequenceKey,
+              gameStateAfterMoveSeq
             );
-
-          const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
-
-          allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
-            sequenceKey,
-            gameStateAfterMoveSeq
+          });
+        } else {
+          const validSecondTurnCaptures = getValidCaptures(
+            playerPieceCoordinateAfterCapture,
+            stateAfterCapture
           );
-        });
+          if (validSecondTurnCaptures && validSecondTurnCaptures.size) {
+            validSecondTurnCaptures.forEach(toCoordinate => {
+              const nextGameState = stateAfterCapture
+                .set(playerPieceCoordinateAfterCapture, null)
+                .set(toCoordinate, fromPiece);
+              const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
+
+              allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+                sequenceKey,
+                nextGameState
+              );
+            });
+          }
+        }
       });
     });
 
@@ -776,6 +801,11 @@ export function initGame() {
   });
 }
 
-GAME_STATE_BOARD_CANVAS.addEventListener("mousedown", handleClickPiece);
-GAME_STATE_BOARD_CANVAS.addEventListener("mousemove", handleMovePiece);
-GAME_STATE_BOARD_CANVAS.addEventListener("mouseup", handleDropPiece);
+const isMobile = "ontouchstart" in document.documentElement;
+const mouseUpEvent = isMobile ? "touchend" : "mouseup";
+const mouseDownEvent = isMobile ? "touchstart" : "mousedown";
+const mouseMoveEvent = isMobile ? "touchmove" : "mousemove";
+
+GAME_STATE_BOARD_CANVAS.addEventListener(mouseDownEvent, handleClickPiece);
+GAME_STATE_BOARD_CANVAS.addEventListener(mouseMoveEvent, handleMovePiece);
+GAME_STATE_BOARD_CANVAS.addEventListener(mouseUpEvent, handleDropPiece);
