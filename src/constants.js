@@ -1,13 +1,13 @@
 import { Record } from "immutable";
 
 const useWindowHeight = window.innerWidth > window.innerHeight;
-
+const extraSpace = useWindowHeight ? 2.5 : 2;
 export const DEBUG = false;
 export const NUMBER_OF_ROWS = 8;
 export const NUMBER_OF_COLS = 8;
 export const TRIANGLE_SIDE_LENGTH =
   (useWindowHeight ? window.innerHeight : window.innerWidth) /
-  (NUMBER_OF_COLS + 2.5);
+  (NUMBER_OF_COLS + extraSpace);
 export const TRIANGLE_HEIGHT = TRIANGLE_SIDE_LENGTH * (Math.sqrt(3) / 2);
 export const CACHED_CANVAS = document.createElement("canvas");
 export const GAME_STATE_BOARD_CANVAS = document.getElementById(
