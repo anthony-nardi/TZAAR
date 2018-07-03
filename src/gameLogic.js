@@ -63,6 +63,10 @@ function handleClickPiece(event) {
     return;
   }
 
+  if (currentTurn === PLAYER_TWO) {
+    return;
+  }
+
   setNewgameBoardState(
     gameBoardState.setIn([boardCoordinate, "isDragging"], true)
   );
@@ -147,9 +151,9 @@ function checkGameStateAndStartNextTurn() {
   nextPhase();
 
   const winner = getWinner(gameBoardState);
-
-  if (Boolean(winner)) {
-    alert(`${winner} won!`);
+  let message = winner === PLAYER_TWO ? "You lost." : "You won!";
+  if (winner) {
+    alert(`${message}`);
     return;
   }
 }
@@ -417,6 +421,9 @@ function getWinner(gameState) {
   }
 }
 
+window.getWinner = getWinner;
+window.gameBoardState = gameBoardState;
+
 function getGameStatesToAnalyze(gameState, turn) {
   const EARLY_GAME = numberOfTurnsIntoGame < 10;
 
@@ -463,6 +470,8 @@ function getBestMove(gameState, turn) {
     console.log(
       `ALL POSSIBLE GAME STATES AT DEPTH 0: ${allPossibleStatesAfterTurn.size}`
     );
+
+  DEBUG && console.time("get scores");
 
   // For every move AI makes, give minimax the state and let player one make its move...
   const scoresByMoveSeq = allPossibleStatesAfterTurn.reduce(
@@ -800,6 +809,7 @@ function getScoreForStacks(numberOfPieces, stackSize) {
 
 export function initGame() {
   drawInitialGrid();
+
   const piecesToSetup = setupBoardWithPieces();
   renderInitializingBoard(piecesToSetup, () => {
     drawGameBoardState();

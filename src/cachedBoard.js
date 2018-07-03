@@ -4,10 +4,13 @@ import {
   TRIANGLE_SIDE_LENGTH,
   TRIANGLE_HEIGHT,
   CACHED_CANVAS,
-  GAME_STATE_BOARD_CANVAS
+  GAME_STATE_BOARD_CANVAS,
+  PIXEL_RATIO
 } from "./constants";
 
 const COORDS_TO_NOT_RENDER = [
+  "0,0",
+  "0,1",
   "1,0",
   "2,0",
   "3,0",
@@ -24,18 +27,41 @@ const COORDS_TO_NOT_RENDER = [
   "6,7",
   "4,3",
   "3,4",
-  "4,4"
+  "4,4",
+  "7,7"
 ];
 
-const OFFSET_X = 2 * TRIANGLE_SIDE_LENGTH;
+const OFFSET_X = 0;
 
 const grid = getInitialGridState();
 
 function initCanvas() {
-  CACHED_CANVAS.width = window.innerWidth;
-  CACHED_CANVAS.height = window.innerHeight;
-  GAME_STATE_BOARD_CANVAS.width = window.innerWidth;
-  GAME_STATE_BOARD_CANVAS.height = window.innerHeight;
+  CACHED_CANVAS.width = window.innerWidth * PIXEL_RATIO;
+  CACHED_CANVAS.height = window.innerHeight * PIXEL_RATIO;
+  CACHED_CANVAS.style.width = `${window.innerWidth}px`;
+  CACHED_CANVAS.style.height = `${window.innerHeight}px`;
+
+  GAME_STATE_BOARD_CANVAS.width = window.innerWidth * PIXEL_RATIO;
+  GAME_STATE_BOARD_CANVAS.height = window.innerHeight * PIXEL_RATIO;
+  GAME_STATE_BOARD_CANVAS.style.width = `${window.innerWidth}px`;
+  GAME_STATE_BOARD_CANVAS.style.height = `${window.innerHeight}px`;
+
+  CACHED_CANVAS.getContext("2d").setTransform(
+    PIXEL_RATIO,
+    0,
+    0,
+    PIXEL_RATIO,
+    0,
+    0
+  );
+  GAME_STATE_BOARD_CANVAS.getContext("2d").setTransform(
+    PIXEL_RATIO,
+    0,
+    0,
+    PIXEL_RATIO,
+    0,
+    0
+  );
 }
 
 function getContext() {
@@ -57,20 +83,21 @@ function getInitialGridState() {
 function getImageData() {
   const context = getContext();
   return context.getImageData(
-    OFFSET_X,
+    OFFSET_X * PIXEL_RATIO,
     0,
-    8 * TRIANGLE_SIDE_LENGTH,
-    8 * TRIANGLE_HEIGHT
+    PIXEL_RATIO * window.innerWidth,
+    PIXEL_RATIO * window.innerHeight
   );
 }
 
 export function drawCachedBoard() {
   const context = GAME_STATE_BOARD_CANVAS.getContext("2d");
   const imageData = getImageData();
+  // context.drawImage(CACHED_CANVAS, 0, 0);
   context.putImageData(
     imageData,
-    window.innerWidth / 2 - 4 * TRIANGLE_SIDE_LENGTH,
-    window.innerHeight / 2 - 4 * TRIANGLE_HEIGHT
+    (window.innerWidth / 2 - 4 * TRIANGLE_SIDE_LENGTH) * PIXEL_RATIO,
+    (window.innerHeight / 2 - 4 * TRIANGLE_HEIGHT) * PIXEL_RATIO
   );
 }
 
@@ -90,8 +117,7 @@ function renderTriangleFromVertex(coordinate) {
   }
   const [x, y] = coordinate.split(",");
 
-  const offsetX = (y * TRIANGLE_SIDE_LENGTH) / 2;
-
+  const offsetX = (y * TRIANGLE_SIDE_LENGTH) / 2 - TRIANGLE_SIDE_LENGTH * 2;
   const startX = x * TRIANGLE_SIDE_LENGTH + offsetX;
   const startY = y * TRIANGLE_HEIGHT;
 
