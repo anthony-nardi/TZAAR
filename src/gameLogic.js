@@ -75,13 +75,13 @@ function handleDropPiece(event) {
   }
 
   const [x, y] = getPixelCoordinatesFromUserInteraction(event);
-  const toPieceBoardCoordinates = getBoardCoordinatesFromPixelCoordinates(x, y);
+  const toCoordinates = getBoardCoordinatesFromPixelCoordinates(x, y);
 
   setNewgameBoardState(
     gameBoardState.setIn([movingPiece, "isDragging"], false)
   );
 
-  if (!gameBoardState.get(toPieceBoardCoordinates)) {
+  if (!gameBoardState.get(toCoordinates)) {
     setMovingPiece(null);
     drawGameBoardState();
     return;
@@ -89,17 +89,17 @@ function handleDropPiece(event) {
 
   const validCaptures = getValidCaptures(movingPiece, gameBoardState);
   const validStacks = getValidStacks(movingPiece, gameBoardState);
-  const isValidCapture = validCaptures.includes(toPieceBoardCoordinates);
-  const isValidStack = validStacks.includes(toPieceBoardCoordinates);
+  const isValidCapture = validCaptures.includes(toCoordinates);
+  const isValidStack = validStacks.includes(toCoordinates);
 
   if (turnPhase === TURN_PHASES.CAPTURE && isValidCapture) {
-    capturePiece(movingPiece, toPieceBoardCoordinates);
+    capturePiece(movingPiece, toCoordinates);
   } else if (turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
     if (isValidCapture) {
-      capturePiece(movingPiece, toPieceBoardCoordinates);
+      capturePiece(movingPiece, toCoordinates);
     }
     if (isValidStack) {
-      stackPiece(movingPiece, toPieceBoardCoordinates);
+      stackPiece(movingPiece, toCoordinates);
     }
   }
 
