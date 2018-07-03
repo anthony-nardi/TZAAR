@@ -65,12 +65,12 @@ export function drawGamePiece(gamePiece, xPos, yPos) {
   if (gamePiece.ownedBy === "PLAYER_ONE") {
     context.fillStyle = "#212121";
     context.beginPath();
-    context.arc(xPos, yPos, TRIANGLE_HEIGHT / 3, 0, 2 * Math.PI);
+    context.arc(xPos, yPos, TRIANGLE_HEIGHT / 2.5, 0, 2 * Math.PI);
     context.fill();
   } else {
     context.fillStyle = "#0D47A1";
     context.beginPath();
-    context.arc(xPos, yPos, TRIANGLE_HEIGHT / 3, 0, 2 * Math.PI);
+    context.arc(xPos, yPos, TRIANGLE_HEIGHT / 2.5, 0, 2 * Math.PI);
     context.fill();
   }
 

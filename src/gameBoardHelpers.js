@@ -169,3 +169,128 @@ export function isValidEmptyCoordinate(coordinate, gameState) {
     PLAYABLE_VERTICES.includes(coordinate) && !gameState.get(coordinate)
   );
 }
+
+function getNextValidCapture(fromCoordinate, direction, gameState) {
+  let nextMove;
+  let coordinateToCheck = fromCoordinate;
+  while (nextMove === undefined) {
+    coordinateToCheck = nextPiece[direction](coordinateToCheck);
+
+    // Not a space that we can play on
+    if (!isPlayableSpace(coordinateToCheck)) {
+      nextMove = false;
+    }
+
+    // This space is empty so we can continue
+    else if (isValidEmptyCoordinate(coordinateToCheck, gameState)) {
+      nextMove = undefined;
+    }
+
+    // First piece we encounter can't be captured
+    else if (!canCapture(fromCoordinate, coordinateToCheck, gameState)) {
+      nextMove = false;
+    }
+    // Finally a piece we can capture
+    else {
+      nextMove = coordinateToCheck;
+    }
+  }
+  return nextMove;
+}
+
+function getNextValidStack(fromCoordinate, direction, gameState) {
+  let nextMove;
+  let coordinateToCheck = fromCoordinate;
+  while (nextMove === undefined) {
+    coordinateToCheck = nextPiece[direction](coordinateToCheck);
+
+    // Not a space that we can play on
+    if (!isPlayableSpace(coordinateToCheck)) {
+      nextMove = false;
+    }
+
+    // This space is empty so we can continue
+    else if (isValidEmptyCoordinate(coordinateToCheck, gameState)) {
+      nextMove = undefined;
+    }
+
+    // First piece we encounter can't be captured
+    else if (!canStack(fromCoordinate, coordinateToCheck, gameState)) {
+      nextMove = false;
+    }
+    // Finally a piece we can capture
+    else {
+      nextMove = coordinateToCheck;
+    }
+  }
+  return nextMove;
+}
+
+export function getValidCaptures(fromCoordinate, gameState) {
+  return List([
+    getNextValidCapture(fromCoordinate, "w", gameState),
+    getNextValidCapture(fromCoordinate, "e", gameState),
+    getNextValidCapture(fromCoordinate, "nw", gameState),
+    getNextValidCapture(fromCoordinate, "ne", gameState),
+    getNextValidCapture(fromCoordinate, "sw", gameState),
+    getNextValidCapture(fromCoordinate, "se", gameState)
+  ]).filter(isValidMove => isValidMove);
+}
+
+export function getValidStacks(fromCoordinate, gameState) {
+  return List([
+    getNextValidStack(fromCoordinate, "w", gameState),
+    getNextValidStack(fromCoordinate, "e", gameState),
+    getNextValidStack(fromCoordinate, "nw", gameState),
+    getNextValidStack(fromCoordinate, "ne", gameState),
+    getNextValidStack(fromCoordinate, "sw", gameState),
+    getNextValidStack(fromCoordinate, "se", gameState)
+  ]).filter(isValidMove => isValidMove);
+}
+export function getInvertedValidCaptures(toCoordinate, gameState) {
+  return List([
+    getNextInvertedValidCapture(toCoordinate, "w", gameState),
+    getNextInvertedValidCapture(toCoordinate, "e", gameState),
+    getNextInvertedValidCapture(toCoordinate, "nw", gameState),
+    getNextInvertedValidCapture(toCoordinate, "ne", gameState),
+    getNextInvertedValidCapture(toCoordinate, "sw", gameState),
+    getNextInvertedValidCapture(toCoordinate, "se", gameState)
+  ]).filter(isValidMove => isValidMove);
+}
+
+function getNextInvertedValidCapture(toCoordinate, direction, gameState) {
+  let nextMove;
+  let coordinateToCheck = toCoordinate;
+  while (nextMove === undefined) {
+    coordinateToCheck = nextPiece[direction](coordinateToCheck);
+
+    // Not a space that we can play on
+    if (!isPlayableSpace(coordinateToCheck)) {
+      nextMove = false;
+    }
+
+    // This space is empty so we can continue
+    else if (isValidEmptyCoordinate(coordinateToCheck, gameState)) {
+      nextMove = undefined;
+    }
+
+    // First piece we encounter can't be captured
+    else if (!canCapture(coordinateToCheck, toCoordinate, gameState)) {
+      nextMove = false;
+    }
+    // Finally a piece we can capture
+    else {
+      nextMove = coordinateToCheck;
+    }
+  }
+  return nextMove;
+}
+
+export const nextPiece = {
+  w: goWest,
+  e: goEast,
+  nw: goNorthWest,
+  ne: goNorthEast,
+  sw: goSouthWest,
+  se: goSouthEast
+};
