@@ -18,6 +18,7 @@ import {
   getBoardCoordinatesFromPixelCoordinates,
   getPixelCoordinatesFromBoardCoordinates,
   setupBoardWithPieces,
+  setupBoardWithPiecesNotRandom,
   getValidCaptures,
   getValidStacks
 } from "./gameBoardHelpers";
@@ -288,3 +289,40 @@ const mouseMoveEvent = isMobile ? "touchmove" : "mousemove";
 GAME_STATE_BOARD_CANVAS.addEventListener(mouseDownEvent, handleClickPiece);
 GAME_STATE_BOARD_CANVAS.addEventListener(mouseMoveEvent, handleMovePiece);
 GAME_STATE_BOARD_CANVAS.addEventListener(mouseUpEvent, handleDropPiece);
+
+// window.testMinimax = function() {
+//   const setupToTest = setupBoardWithPiecesNotRandom();
+
+//   let gameState = gameBoardState;
+
+//   setupToTest.forEach((piece, boardCoordinate) => {
+//     gameState = gameState.set(boardCoordinate, piece);
+//   });
+
+//   console.time("test get all moves");
+
+//   const movesToCheck = getGameStatesToAnalyze(gameState, PLAYER_TWO);
+
+//   console.timeEnd("test get all moves");
+//   console.log(`all moves; ${movesToCheck.size}`);
+
+//   console.time("test get scores");
+
+//   // For every move AI makes, give minimax the state and let player one make its move...
+//   const scoresByMoveSeq = movesToCheck.reduce(
+//     (scoreMap, gameStateToCheck, moveSeq) => {
+//       scoreMap = scoreMap.set(
+//         moveSeq,
+//         minimax(gameStateToCheck, PLAYER_ONE, 1)
+//       );
+
+//       return scoreMap;
+//     },
+//     Map()
+//   );
+
+//   console.timeEnd("test get scores");
+//   console.log(scoresByMoveSeq.toJS());
+// };
+
+// testMinimax();

@@ -93,7 +93,7 @@ function getScoreForStacks(numberOfPieces, stackSize) {
   return (MULTIPLIER - numberOfPieces) * stackSize;
 }
 
-export function minimax(gameState, turn, depth) {
+export function minimax(gameState, turn, depth, alpha = 5, beta = Infinity) {
   const winner = getWinner(gameState);
   if (winner === PLAYER_ONE) {
     return -Infinity;
@@ -114,9 +114,13 @@ export function minimax(gameState, turn, depth) {
     const gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_TWO);
     gameStatesToAnalyze.forEach(nextGameState => {
       bestValue = Math.max(
-        minimax(nextGameState, PLAYER_ONE, depth - 1),
+        minimax(nextGameState, PLAYER_ONE, depth - 1, alpha, beta),
         bestValue
       );
+      alpha = Math.max(bestValue, alpha);
+      if (alpha >= beta) {
+        return false;
+      }
     });
 
     return bestValue;
@@ -131,9 +135,13 @@ export function minimax(gameState, turn, depth) {
 
     gameStatesToAnalyze.forEach(nextGameState => {
       bestValue = Math.min(
-        minimax(nextGameState, PLAYER_TWO, depth - 1),
+        minimax(nextGameState, PLAYER_TWO, depth - 1, alpha, beta),
         bestValue
       );
+      beta = Math.min(beta, bestValue);
+      if (alpha >= beta) {
+        return false;
+      }
     });
 
     return bestValue;
@@ -326,7 +334,7 @@ function getEarlyGamePossibleMoveSequences(gameState, PIECE_TYPE, turn) {
   }, Map());
 }
 
-function getPossibleMoveSequences(gameState, turn) {
+export function getPossibleMoveSequences(gameState, turn) {
   const allPlayerPieces = getAllPlayerPieceCoordinates(gameState, turn);
 
   return allPlayerPieces.reduce((allGameStatesAfterMoveSeq, fromCoordinate) => {

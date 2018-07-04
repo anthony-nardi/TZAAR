@@ -105,6 +105,49 @@ export function isPlayableSpace(coordinate) {
   return PLAYABLE_VERTICES.includes(coordinate);
 }
 
+// for testing
+export function setupBoardWithPiecesNotRandom() {
+  let piecesToDraw = Map();
+  let PLAYER_ONE_PIECES = List();
+  let PLAYER_TWO_PIECES = List();
+
+  for (let i = 0; i < NUMBER_OF_TOTTS; i++) {
+    PLAYER_ONE_PIECES = PLAYER_ONE_PIECES.push(
+      new GamePieceRecord({ type: TOTT, ownedBy: "PLAYER_ONE" })
+    );
+    PLAYER_TWO_PIECES = PLAYER_TWO_PIECES.push(
+      new GamePieceRecord({ type: TOTT, ownedBy: "PLAYER_TWO" })
+    );
+  }
+
+  for (let i = 0; i < NUMBER_OF_TZARRAS; i++) {
+    PLAYER_ONE_PIECES = PLAYER_ONE_PIECES.push(
+      new GamePieceRecord({ type: TZARRA, ownedBy: "PLAYER_ONE" })
+    );
+    PLAYER_TWO_PIECES = PLAYER_TWO_PIECES.push(
+      new GamePieceRecord({ type: TZARRA, ownedBy: "PLAYER_TWO" })
+    );
+  }
+
+  for (let i = 0; i < NUMBER_OF_TZAARS; i++) {
+    PLAYER_ONE_PIECES = PLAYER_ONE_PIECES.push(
+      new GamePieceRecord({ type: TZAAR, ownedBy: "PLAYER_ONE" })
+    );
+    PLAYER_TWO_PIECES = PLAYER_TWO_PIECES.push(
+      new GamePieceRecord({ type: TZAAR, ownedBy: "PLAYER_TWO" })
+    );
+  }
+
+  const allGamePieces = PLAYER_ONE_PIECES.concat(PLAYER_TWO_PIECES);
+  const shuffledPieces = allGamePieces;
+
+  shuffledPieces.forEach((piece, index) => {
+    piecesToDraw = piecesToDraw.set(PLAYABLE_VERTICES[index], piece);
+    // setNewgameBoardState(gameBoardState.set(PLAYABLE_VERTICES[index], piece));
+  });
+  return piecesToDraw;
+}
+
 export function setupBoardWithPieces() {
   let piecesToDraw = Map();
   let PLAYER_ONE_PIECES = List();
