@@ -232,44 +232,31 @@ function getBestMove(gameState, turn) {
 
   const allPossibleStatesAfterTurn = getGameStatesToAnalyze(gameState, turn);
 
-  let depth = 0;
+  let depth = 2;
 
-  if (allPossibleStatesAfterTurn.size < 20) {
-    depth = 2;
+  if (allPossibleStatesAfterTurn.size < 75) {
+    depth = 3;
   }
 
-  if (allPossibleStatesAfterTurn.size < 150) {
-    depth = 1;
+  if (allPossibleStatesAfterTurn.size < 20) {
+    depth = 4;
   }
 
   DEBUG && console.timeEnd("all game states");
   DEBUG &&
     console.log(
-      `ALL POSSIBLE GAME STATES AT DEPTH 0: ${allPossibleStatesAfterTurn.size}`
+      `ALL POSSIBLE GAME STATES AT DEPTH ${depth}: ${
+        allPossibleStatesAfterTurn.size
+      }`
     );
 
   DEBUG && console.time("get scores");
 
   // For every move AI makes, give minimax the state and let player one make its move...
-  const scoresByMoveSeq = allPossibleStatesAfterTurn.reduce(
-    (scoreMap, gameStateToCheck, moveSeq) => {
-      scoreMap = scoreMap.set(
-        moveSeq,
-        minimax(gameStateToCheck, PLAYER_ONE, depth)
-      );
-
-      return scoreMap;
-    },
-    Map()
-  );
-
-  DEBUG && console.timeEnd("get scores");
-
-  const bestMove = scoresByMoveSeq.sort().reverse();
-  const movesToMake = bestMove.keySeq().first();
+  const [bestMove] = minimax(gameState, PLAYER_TWO, depth);
 
   document.getElementById("loadingSpinner").classList.add("hidden");
-  return movesToMake;
+  return bestMove;
 }
 
 export function initGame(SETUP_STYLE) {
@@ -302,30 +289,20 @@ GAME_STATE_BOARD_CANVAS.addEventListener(mouseUpEvent, handleDropPiece);
 //     gameState = gameState.set(boardCoordinate, piece);
 //   });
 
-//   console.time("test get all moves");
+//   const startingMoves = getGameStatesToAnalyze(gameState, PLAYER_TWO);
+//   console.log(`starting moves to check : ${startingMoves.size}`);
+//   // console.time(`${allMovesToCheck.size} depth 1`);
 
-//   const movesToCheck = getGameStatesToAnalyze(gameState, PLAYER_TWO);
+//   // allMovesToCheck.map(gameStateToCheck => {
+//   //   return minimax(gameStateToCheck, PLAYER_ONE, 1);
+//   // });
+//   // console.timeEnd(`${allMovesToCheck.size} depth 1`);
 
-//   console.timeEnd("test get all moves");
-//   console.log(`all moves; ${movesToCheck.size}`);
+//   window.minimaxIterations = 0;
 
-//   console.time("test get scores");
+//   const minimaxResult = minimax(gameState, PLAYER_TWO, 2);
 
-//   // For every move AI makes, give minimax the state and let player one make its move...
-//   const scoresByMoveSeq = movesToCheck.reduce(
-//     (scoreMap, gameStateToCheck, moveSeq) => {
-//       scoreMap = scoreMap.set(
-//         moveSeq,
-//         minimax(gameStateToCheck, PLAYER_ONE, 1)
-//       );
-
-//       return scoreMap;
-//     },
-//     Map()
-//   );
-
-//   console.timeEnd("test get scores");
-//   console.log(scoresByMoveSeq.toJS());
+//   console.log(`TOTAL ITERATIONS ${window.minimaxIterations}`);
 // };
 
 // testMinimax();

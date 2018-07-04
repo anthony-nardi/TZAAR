@@ -24,7 +24,7 @@ export const PIXEL_RATIO = (function() {
 const windowInnerHeightDeviceRatio = window.innerHeight;
 const windowInnerWidthDeviceRatio = window.innerWidth;
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const NUMBER_OF_ROWS = 8;
 export const NUMBER_OF_COLS = 8;
 export const TRIANGLE_SIDE_LENGTH =
