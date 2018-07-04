@@ -272,8 +272,11 @@ function getBestMove(gameState, turn) {
   return movesToMake;
 }
 
-export function initGame() {
-  const piecesToSetup = setupBoardWithPieces();
+export function initGame(SETUP_STYLE) {
+  const piecesToSetup =
+    SETUP_STYLE !== "RANDOM"
+      ? setupBoardWithPiecesNotRandom()
+      : setupBoardWithPieces();
   drawInitialGrid();
   renderInitializingBoard(piecesToSetup, () => {
     drawGameBoardState();
