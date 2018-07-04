@@ -232,7 +232,11 @@ function getBestMove(gameState, turn) {
 
   const allPossibleStatesAfterTurn = getGameStatesToAnalyze(gameState, turn);
 
-  let depth = 2;
+  let depth = 1;
+
+  if (allPossibleStatesAfterTurn.size < 500) {
+    depth = 2;
+  }
 
   if (allPossibleStatesAfterTurn.size < 75) {
     depth = 3;
@@ -253,7 +257,8 @@ function getBestMove(gameState, turn) {
   DEBUG && console.time("get scores");
 
   // For every move AI makes, give minimax the state and let player one make its move...
-  const [bestMove] = minimax(gameState, PLAYER_TWO, depth);
+  const bestMove = minimax(gameState, PLAYER_TWO, depth)[1];
+  DEBUG && console.timeEnd("get scores");
 
   document.getElementById("loadingSpinner").classList.add("hidden");
   return bestMove;
