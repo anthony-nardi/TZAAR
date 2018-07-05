@@ -1,14 +1,5 @@
 import { List, Map } from "immutable";
-import {
-  TZAAR,
-  TOTT,
-  TZARRA,
-  NUMBER_OF_TOTTS,
-  NUMBER_OF_TZARRAS,
-  NUMBER_OF_TZAARS,
-  PLAYER_ONE,
-  PLAYER_TWO
-} from "./constants";
+import { TZAAR, TOTT, TZARRA, PLAYER_ONE, PLAYER_TWO } from "./constants";
 
 import { currentTurn, numberOfTurnsIntoGame } from "./gameState";
 import {
@@ -59,23 +50,26 @@ export function getGameStateScore(gameState) {
       .updateIn([ownedBy, type, "count"], count => count + 1)
       .updateIn(
         [ownedBy, type, "stacksGreaterThanOne"],
-        stacks => stacks + (Number(stackSize))
+        stacks => stacks + Number(stackSize)
       );
   }, scoringMapRecord);
 
   let score = 0;
-  
-  scoringMap.get(PLAYER_ONE).forEach((data, pieceType) => {
+
+  scoringMap.get(PLAYER_ONE).forEach(data => {
     score =
       score -
-      30 / data.get('count') - getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
+      30 / data.get("count") -
+      getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
   });
 
-  scoringMap.get(PLAYER_TWO).forEach((data, pieceType) => {
+  scoringMap.get(PLAYER_TWO).forEach(data => {
     score =
-      score + 30 / data.get('count')  + getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"))
+      score +
+      30 / data.get("count") +
+      getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
   });
-  
+
   return score;
 }
 
@@ -219,46 +213,37 @@ export function getWinner(gameState) {
   const possibleCaptures = getAllPlayerPieceCoordinates(
     gameState,
     currentTurn
-  ).map((fromCoordinate) => {
+  ).map(fromCoordinate => {
     return getValidCaptures(fromCoordinate, gameState);
-  })
+  });
 
   if (!possibleCaptures.size) {
     return currentTurn === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
   }
 }
 
-// export function getGameStatesToAnalyze(gameState, turn) {
-//   const EARLY_GAME = numberOfTurnsIntoGame < 10;
-
-//   let allPossibleStatesAfterTurn = EARLY_GAME
-//     ? getEarlyGamePossibleMoveSequences(gameState, TZAAR, turn)
-//     : getPossibleMoveSequences(gameState, turn);
-
-//   if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
-//     allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
-//       gameState,
-//       TZARRA,
-//       turn
-//     );
-//   }
-
-//   if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
-//     allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
-//       gameState,
-//       TOTT,
-//       turn
-//     );
-//   }
-
-//   return allPossibleStatesAfterTurn;
-// }
-
 export function getGameStatesToAnalyze(gameState, turn) {
+  const EARLY_GAME = numberOfTurnsIntoGame < 10;
 
-  let allPossibleStatesAfterTurn = getPossibleMoveSequences(gameState, turn);
+  let allPossibleStatesAfterTurn = EARLY_GAME
+    ? getEarlyGamePossibleMoveSequences(gameState, turn)
+    : getPossibleMoveSequences(gameState, turn);
 
+  if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
+    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
+      gameState,
+      TZARRA,
+      turn
+    );
+  }
 
+  if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
+    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
+      gameState,
+      TOTT,
+      turn
+    );
+  }
 
   return allPossibleStatesAfterTurn;
 }
