@@ -59,14 +59,12 @@ export function getGameStateScore(gameState) {
   scoringMap.get(PLAYER_ONE).forEach(data => {
     score =
       score -
-      30 / data.get("count") -
       getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
   });
 
   scoringMap.get(PLAYER_TWO).forEach(data => {
     score =
       score +
-      30 / data.get("count") +
       getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
   });
 
