@@ -64,16 +64,18 @@ export function getGameStateScore(gameState) {
   }, scoringMapRecord);
 
   let score = 0;
-  debugger
+  
   scoringMap.get(PLAYER_ONE).forEach((data, pieceType) => {
     score =
       score -
-      30 / data.get('count') * data.get("stacksGreaterThanOne");
+      30 / data.get('count') - getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
   });
+
   scoringMap.get(PLAYER_TWO).forEach((data, pieceType) => {
     score =
-      score + 30 / data.get('count') * data.get("stacksGreaterThanOne")
+      score + 30 / data.get('count')  + getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"))
   });
+  
   return score;
 }
 
@@ -226,28 +228,37 @@ export function getWinner(gameState) {
   }
 }
 
+// export function getGameStatesToAnalyze(gameState, turn) {
+//   const EARLY_GAME = numberOfTurnsIntoGame < 10;
+
+//   let allPossibleStatesAfterTurn = EARLY_GAME
+//     ? getEarlyGamePossibleMoveSequences(gameState, TZAAR, turn)
+//     : getPossibleMoveSequences(gameState, turn);
+
+//   if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
+//     allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
+//       gameState,
+//       TZARRA,
+//       turn
+//     );
+//   }
+
+//   if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
+//     allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
+//       gameState,
+//       TOTT,
+//       turn
+//     );
+//   }
+
+//   return allPossibleStatesAfterTurn;
+// }
+
 export function getGameStatesToAnalyze(gameState, turn) {
-  const EARLY_GAME = numberOfTurnsIntoGame < 10;
 
-  let allPossibleStatesAfterTurn = EARLY_GAME
-    ? getEarlyGamePossibleMoveSequences(gameState, TZAAR, turn)
-    : getPossibleMoveSequences(gameState, turn);
+  let allPossibleStatesAfterTurn = getPossibleMoveSequences(gameState, turn);
 
-  if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
-    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
-      gameState,
-      TZARRA,
-      turn
-    );
-  }
 
-  if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
-    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
-      gameState,
-      TOTT,
-      turn
-    );
-  }
 
   return allPossibleStatesAfterTurn;
 }
