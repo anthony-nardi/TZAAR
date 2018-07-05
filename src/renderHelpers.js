@@ -37,6 +37,7 @@ export function drawCoordinate(coordinate) {
     (Math.abs(4 - y) * TRIANGLE_SIDE_LENGTH) / 2 + offsetX + offsetXToCenter;
 
   const yPos = y * TRIANGLE_HEIGHT + offsetYToCenter;
+  context.font = '.5rem Helvetica'
   context.fillStyle = "#39ff14";
   context.fillText(coordinate, xPos + 10, yPos + 10);
 }
@@ -88,10 +89,10 @@ export function drawGamePiece(gamePiece, xPos, yPos) {
   }
 
   if (gamePiece.stackSize) {
-    context.font = "12px Verdana";
+    context.font = "1.15rem Helvetica";
     context.fillStyle = gamePiece.type === TZAAR ? "#000" : "#fff";
 
-    context.fillText(gamePiece.stackSize, +xPos - 4, +yPos + 4);
+    context.fillText(gamePiece.stackSize, +xPos - 6, +yPos + 6);
   }
 }
 

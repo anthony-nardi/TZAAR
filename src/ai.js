@@ -17,12 +17,6 @@ import {
   getInvertedValidCaptures
 } from "./gameBoardHelpers";
 
-const typeScores = {
-  [TOTT]: 30 / NUMBER_OF_TOTTS,
-  [TZARRA]: 30 / NUMBER_OF_TZARRAS,
-  [TZAAR]: 30 / NUMBER_OF_TZAARS
-};
-
 const scoringMapRecord = Map({
   [PLAYER_ONE]: Map({
     [TOTT]: Map({
@@ -54,7 +48,7 @@ const scoringMapRecord = Map({
   })
 });
 
-export function getGameStateScore2(gameState) {
+export function getGameStateScore(gameState) {
   const scoringMap = gameState.reduce((piecesByPlayer, piece) => {
     if (!piece) {
       return piecesByPlayer;
@@ -65,23 +59,20 @@ export function getGameStateScore2(gameState) {
       .updateIn([ownedBy, type, "count"], count => count + 1)
       .updateIn(
         [ownedBy, type, "stacksGreaterThanOne"],
-        stacks => stacks + (Number(stackSize) - 1)
+        stacks => stacks + (Number(stackSize))
       );
   }, scoringMapRecord);
 
   let score = 0;
-
+  debugger
   scoringMap.get(PLAYER_ONE).forEach((data, pieceType) => {
     score =
       score -
-      data.get("count") * typeScores[pieceType] -
-      getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
+      30 / data.get('count') * data.get("stacksGreaterThanOne");
   });
   scoringMap.get(PLAYER_TWO).forEach((data, pieceType) => {
     score =
-      score +
-      data.get("count") * typeScores[pieceType] +
-      getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne"));
+      score + 30 / data.get('count') * data.get("stacksGreaterThanOne")
   });
   return score;
 }
@@ -109,7 +100,7 @@ export function minimax(
   }
 
   if (depth === 0) {
-    return [getGameStateScore2(gameState)];
+    return [getGameStateScore(gameState)];
   }
 
   // maximizing player
@@ -226,9 +217,9 @@ export function getWinner(gameState) {
   const possibleCaptures = getAllPlayerPieceCoordinates(
     gameState,
     currentTurn
-  ).reduce((list, fromCoordinate) => {
-    return list.concat(getValidCaptures(fromCoordinate, gameState));
-  }, List());
+  ).map((fromCoordinate) => {
+    return getValidCaptures(fromCoordinate, gameState);
+  })
 
   if (!possibleCaptures.size) {
     return currentTurn === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;

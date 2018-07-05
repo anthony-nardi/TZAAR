@@ -109,7 +109,7 @@ function handleDropPiece(event) {
 
   if (turnPhase === TURN_PHASES.CAPTURE && currentTurn === PLAYER_TWO) {
     document.getElementById("loadingSpinner").classList.remove("hidden");
-    setTimeout(() => moveAI(), 1);
+    setTimeout(() => moveAI(), 50);
   }
 }
 
