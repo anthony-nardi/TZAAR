@@ -224,17 +224,15 @@ export function getWinner(gameState) {
 
 export function getGameStatesToAnalyze(gameState, turn) {
   const EARLY_GAME = numberOfTurnsIntoGame < 10;
-
-  let allPossibleStatesAfterTurn = EARLY_GAME
-    ? getEarlyGamePossibleMoveSequences(gameState, turn)
-    : getPossibleMoveSequences(gameState, turn);
-
-  if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
+  let allPossibleStatesAfterTurn = List();
+  if (!EARLY_GAME) {
+    allPossibleStatesAfterTurn = getPossibleMoveSequences(gameState, turn);
+  } else {
     allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
       gameState,
-      TZARRA,
+      TZAAR,
       turn
-    );
+    ).concat(getEarlyGamePossibleMoveSequences(gameState, TZARRA, turn));
   }
 
   if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
