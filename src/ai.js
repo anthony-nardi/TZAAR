@@ -223,6 +223,7 @@ export function getWinner(gameState) {
 export function getGameStatesToAnalyze(gameState, turn) {
   const EARLY_GAME = numberOfTurnsIntoGame < 10;
   let allPossibleStatesAfterTurn = List();
+
   if (!EARLY_GAME) {
     allPossibleStatesAfterTurn = getPossibleMoveSequences(gameState, turn);
   } else {
@@ -256,94 +257,130 @@ export function getAllPlayerPieceCoordinatesByType(gameState, player, type) {
 
 function getEarlyGamePossibleMoveSequences(gameState, PIECE_TYPE, turn) {
   const playerPiecesToCapture = turn === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+  let trySecondCapture = false;
 
   // get opponents most valuable pieces to capture.
-  const allPlayerPieces = getAllPlayerPieceCoordinatesByType(
+  const allOpponentPlayerPieces = getAllPlayerPieceCoordinatesByType(
     gameState,
     playerPiecesToCapture,
     PIECE_TYPE
   );
 
-  return allPlayerPieces.reduce((allGameStatesAfterMoveSeq, toCoordinate) => {
-    const validCaptures = getInvertedValidCaptures(toCoordinate, gameState);
+  if (allOpponentPlayerPieces.size <= 2) {
+    trySecondCapture = true;
+  }
 
-    // For every piece, get all possible captures
-    // for each and put the resulting game state into a list.
-    const allCaptureStates = validCaptures.reduce(
-      (statesAfterCapture, fromCoordinate) => {
-        const fromPiece = gameState.get(fromCoordinate);
-        const nextGameState = gameState
-          .set(fromCoordinate, null)
-          .set(toCoordinate, fromPiece);
-        return statesAfterCapture.set(
-          `${fromCoordinate}->${toCoordinate}`,
-          nextGameState
-        );
-      },
-      Map()
-    );
+  return allOpponentPlayerPieces.reduce(
+    (allGameStatesAfterMoveSeq, toCoordinate) => {
+      const validCaptures = getInvertedValidCaptures(toCoordinate, gameState);
 
-    // For every game state resulting from the above process,
-    // get all player pieces and return all game states
-    // for every valid stack you can make
-    allCaptureStates.forEach((stateAfterCapture, fromToKey) => {
-      let allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
-        stateAfterCapture,
-        turn,
-        TZAAR
+      // For every piece, get all possible captures
+      // for each and put the resulting game state into a list.
+      const allCaptureStates = validCaptures.reduce(
+        (statesAfterCapture, fromCoordinate) => {
+          const fromPiece = gameState.get(fromCoordinate);
+          const nextGameState = gameState
+            .set(fromCoordinate, null)
+            .set(toCoordinate, fromPiece);
+          return statesAfterCapture.set(
+            `${fromCoordinate}->${toCoordinate}`,
+            nextGameState
+          );
+        },
+        Map()
       );
 
-      if (!allPlayerPiecesAfterCapture.size) {
-        allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
-          stateAfterCapture,
-          turn,
-          TZARRA
-        );
-      }
-      if (!allPlayerPiecesAfterCapture.size) {
-        allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
-          stateAfterCapture,
-          turn,
-          TOTT
-        );
-      }
-      if (!allPlayerPiecesAfterCapture.size) {
-        console.log("halloo");
-        debugger;
-      }
-
-      allPlayerPiecesAfterCapture.forEach(playerPieceCoordinateAfterCapture => {
-        const validStacks = getValidStacks(
-          playerPieceCoordinateAfterCapture,
-          stateAfterCapture
-        );
-
-        const fromPiece = stateAfterCapture.get(
-          playerPieceCoordinateAfterCapture
-        );
-        validStacks.forEach(toCoordinate => {
-          const toPiece = stateAfterCapture.get(toCoordinate);
-
-          const gameStateAfterMoveSeq = stateAfterCapture
-            .set(playerPieceCoordinateAfterCapture, null)
-            .set(toCoordinate, fromPiece)
-            .setIn(
-              [toCoordinate, "stackSize"],
-              fromPiece.stackSize + toPiece.stackSize
+      // For every game state resulting from the above process,
+      // get all player pieces and return all game states
+      // for every valid stack you can make
+      allCaptureStates.forEach((stateAfterCapture, fromToKey) => {
+        if (trySecondCapture) {
+          const allOpponentPlayerPieces = getAllPlayerPieceCoordinatesByType(
+            stateAfterCapture,
+            playerPiecesToCapture,
+            PIECE_TYPE
+          );
+          allOpponentPlayerPieces.forEach(toCoordinate => {
+            const validCaptures = getInvertedValidCaptures(
+              toCoordinate,
+              stateAfterCapture
             );
 
-          const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
+            validCaptures.forEach(fromCoordinate => {
+              const fromPiece = stateAfterCapture.get(fromCoordinate);
+              const sequenceKey = `${fromToKey}=>${fromCoordinate}->${toCoordinate}`;
+              const gameStateAfterSecondCapture = stateAfterCapture
+                .set(fromCoordinate, null)
+                .set(toCoordinate, fromPiece);
+              allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+                sequenceKey,
+                gameStateAfterSecondCapture
+              );
+            });
+          });
+        }
 
-          allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
-            sequenceKey,
-            gameStateAfterMoveSeq
+        let allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
+          stateAfterCapture,
+          turn,
+          TZAAR
+        );
+
+        if (!allPlayerPiecesAfterCapture.size) {
+          allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
+            stateAfterCapture,
+            turn,
+            TZARRA
           );
-        });
-      });
-    });
+        }
+        if (!allPlayerPiecesAfterCapture.size) {
+          allPlayerPiecesAfterCapture = getAllPlayerPieceCoordinatesByType(
+            stateAfterCapture,
+            turn,
+            TOTT
+          );
+        }
+        if (!allPlayerPiecesAfterCapture.size) {
+          alert("This shouldnt be possible, let me know if you see this.");
+          debugger;
+        }
 
-    return allGameStatesAfterMoveSeq;
-  }, Map());
+        allPlayerPiecesAfterCapture.forEach(
+          playerPieceCoordinateAfterCapture => {
+            const validStacks = getValidStacks(
+              playerPieceCoordinateAfterCapture,
+              stateAfterCapture
+            );
+
+            const fromPiece = stateAfterCapture.get(
+              playerPieceCoordinateAfterCapture
+            );
+            validStacks.forEach(toCoordinate => {
+              const toPiece = stateAfterCapture.get(toCoordinate);
+
+              const gameStateAfterMoveSeq = stateAfterCapture
+                .set(playerPieceCoordinateAfterCapture, null)
+                .set(toCoordinate, fromPiece)
+                .setIn(
+                  [toCoordinate, "stackSize"],
+                  fromPiece.stackSize + toPiece.stackSize
+                );
+
+              const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
+
+              allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+                sequenceKey,
+                gameStateAfterMoveSeq
+              );
+            });
+          }
+        );
+      });
+
+      return allGameStatesAfterMoveSeq;
+    },
+    Map()
+  );
 }
 
 export function getPossibleMoveSequences(gameState, turn) {
