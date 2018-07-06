@@ -157,6 +157,11 @@ function moveAI() {
     return;
   }
 
+  if (!bestMove || !bestMove.split) {
+    console.log(turnPhase);
+    debugger;
+  }
+
   const [firstMove, secondMove] = bestMove.split("=>");
   const [firstFromCoordinate, firstToCoordinate] = firstMove.split("->");
   const [secondFromCoordinate, secondToCoordinate] = secondMove.split("->");
@@ -209,14 +214,21 @@ function moveAI() {
         () => {
           const toPiece = gameBoardState.get(secondToCoordinate);
 
-          setNewgameBoardState(
-            gameBoardState
-              .set(secondToCoordinate, secondFromPiece)
-              .setIn(
-                [secondToCoordinate, "stackSize"],
-                secondFromPiece.stackSize + toPiece.stackSize
-              )
-          );
+          if (secondFromCoordinate.ownedBy === toPiece.ownedBy) {
+            setNewgameBoardState(
+              gameBoardState
+                .set(secondToCoordinate, secondFromPiece)
+                .setIn(
+                  [secondToCoordinate, "stackSize"],
+                  secondFromPiece.stackSize + toPiece.stackSize
+                )
+            );
+          } else {
+            setNewgameBoardState(
+              gameBoardState.set(secondToCoordinate, secondFromPiece)
+            );
+          }
+
           checkGameStateAndStartNextTurn();
           drawGameBoardState();
         }

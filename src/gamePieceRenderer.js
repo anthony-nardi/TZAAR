@@ -128,6 +128,7 @@ const playerTwoTzaar = new GamePieceRecord({
 
 const circleRadius = GAME_PIECE_RADIUS;
 const smallerCircleRadius = GAME_PIECE_RADIUS / 2;
+
 function drawGamePiece(gamePiece, canvas) {
   const context = canvas.getContext("2d");
   if (gamePiece.ownedBy === "PLAYER_ONE") {
