@@ -214,7 +214,7 @@ function moveAI() {
         () => {
           const toPiece = gameBoardState.get(secondToCoordinate);
 
-          if (secondFromCoordinate.ownedBy === toPiece.ownedBy) {
+          if (secondFromPiece.ownedBy === toPiece.ownedBy) {
             setNewgameBoardState(
               gameBoardState
                 .set(secondToCoordinate, secondFromPiece)
