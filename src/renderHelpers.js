@@ -5,12 +5,26 @@ import {
   TRIANGLE_HEIGHT,
   PLAYABLE_VERTICES,
   GAME_STATE_BOARD_CANVAS,
+  TOTT,
   TZAAR,
-  TZARRA
+  TZARRA,
+  PLAYER_ONE,
+  PLAYER_TWO,
+  PIXEL_RATIO
 } from "./constants";
 import { drawCachedBoard } from "./cachedBoard";
 import { gameBoardState, setNewgameBoardState } from "./gameState";
 import { List } from "immutable";
+import {
+  PLAYER_ONE_TOTT,
+  PLAYER_ONE_TZAAR,
+  PLAYER_ONE_TZARRA,
+  PLAYER_TWO_TOTT,
+  PLAYER_TWO_TZAAR,
+  PLAYER_TWO_TZARRA,
+  GAME_PIECE_RADIUS,
+  CANVAS_SIDE_LENGTH
+} from "./gamePieceRenderer";
 
 function getContext() {
   return GAME_STATE_BOARD_CANVAS.getContext("2d");
@@ -37,7 +51,7 @@ export function drawCoordinate(coordinate) {
     (Math.abs(4 - y) * TRIANGLE_SIDE_LENGTH) / 2 + offsetX + offsetXToCenter;
 
   const yPos = y * TRIANGLE_HEIGHT + offsetYToCenter;
-  context.font = '.5rem Helvetica'
+  context.font = ".5rem Helvetica";
   context.fillStyle = "#39ff14";
   context.fillText(coordinate, xPos + 10, yPos + 10);
 }
@@ -63,37 +77,64 @@ export function drawStaticGamePiece(gamePiece, coordinate) {
 
 export function drawGamePiece(gamePiece, xPos, yPos) {
   const context = getContext();
-  if (gamePiece.ownedBy === "PLAYER_ONE") {
-    context.fillStyle = "#212121";
-    context.beginPath();
-    context.arc(xPos, yPos, TRIANGLE_HEIGHT / 2.5, 0, 2 * Math.PI);
-    context.fill();
-  } else {
-    context.fillStyle = "#0D47A1";
-    context.beginPath();
-    context.arc(xPos, yPos, TRIANGLE_HEIGHT / 2.5, 0, 2 * Math.PI);
-    context.fill();
+  if (gamePiece.ownedBy === PLAYER_ONE && gamePiece.type === TOTT) {
+    context.drawImage(
+      PLAYER_ONE_TOTT,
+      xPos - GAME_PIECE_RADIUS,
+      yPos - GAME_PIECE_RADIUS,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO
+    );
+  }
+  if (gamePiece.ownedBy === PLAYER_ONE && gamePiece.type === TZARRA) {
+    context.drawImage(
+      PLAYER_ONE_TZARRA,
+      xPos - GAME_PIECE_RADIUS,
+      yPos - GAME_PIECE_RADIUS,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO
+    );
+  }
+  if (gamePiece.ownedBy === PLAYER_ONE && gamePiece.type === TZAAR) {
+    context.drawImage(
+      PLAYER_ONE_TZAAR,
+      xPos - GAME_PIECE_RADIUS,
+      yPos - GAME_PIECE_RADIUS,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO
+    );
+  }
+  if (gamePiece.ownedBy === PLAYER_TWO && gamePiece.type === TOTT) {
+    context.drawImage(
+      PLAYER_TWO_TOTT,
+      xPos - GAME_PIECE_RADIUS,
+      yPos - GAME_PIECE_RADIUS,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO
+    );
+  }
+  if (gamePiece.ownedBy === PLAYER_TWO && gamePiece.type === TZARRA) {
+    context.drawImage(
+      PLAYER_TWO_TZARRA,
+      xPos - GAME_PIECE_RADIUS,
+      yPos - GAME_PIECE_RADIUS,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO
+    );
+  }
+  if (gamePiece.ownedBy === PLAYER_TWO && gamePiece.type === TZAAR) {
+    context.drawImage(
+      PLAYER_TWO_TZAAR,
+      xPos - GAME_PIECE_RADIUS,
+      yPos - GAME_PIECE_RADIUS,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO,
+      CANVAS_SIDE_LENGTH / PIXEL_RATIO
+    );
   }
 
-  if (gamePiece.type === TZAAR) {
-    context.fillStyle = "#FDD835";
-    context.beginPath();
-    context.arc(xPos, yPos, TRIANGLE_HEIGHT / 6, 0, 2 * Math.PI);
-    context.fill();
-  } else if (gamePiece.type === TZARRA) {
-    context.strokeStyle = "#FDD835";
-    context.lineWidth = 3;
-    context.beginPath();
-    context.arc(xPos, yPos, TRIANGLE_HEIGHT / 5, 0, 2 * Math.PI);
-    context.stroke();
-  }
-
-  if (gamePiece.stackSize) {
-    context.font = "1.15rem Helvetica";
-    context.fillStyle = gamePiece.type === TZAAR ? "#000" : "#fff";
-
-    context.fillText(gamePiece.stackSize, +xPos - 6, +yPos + 6);
-  }
+  context.font = "1.15rem Helvetica";
+  context.fillStyle = gamePiece.type === TZAAR ? "#000" : "#fff";
+  context.fillText(gamePiece.stackSize, +xPos - 6, +yPos + 6);
 }
 
 export function drawGamePieces() {

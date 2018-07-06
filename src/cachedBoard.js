@@ -93,7 +93,7 @@ function getImageData() {
 export function drawCachedBoard() {
   const context = GAME_STATE_BOARD_CANVAS.getContext("2d");
   const imageData = getImageData();
-  // context.drawImage(CACHED_CANVAS, 0, 0);
+
   context.putImageData(
     imageData,
     (window.innerWidth / 2 - 4 * TRIANGLE_SIDE_LENGTH) * PIXEL_RATIO,

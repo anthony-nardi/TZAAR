@@ -14,6 +14,7 @@ function startGameWithRandomSetup() {
 }
 
 function startGameWithSymmetricSetup() {
+  document.getElementById("chooseSetup").classList.add("hidden");
   document.getElementById("gameStateBoardDiv").classList.remove("hidden");
   document.getElementById("gameStateDiv").classList.remove("hidden");
   initGame("SYMMETRIC");
