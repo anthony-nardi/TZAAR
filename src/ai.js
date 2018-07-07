@@ -105,8 +105,6 @@ export function minimax(
     // choose max score after player one makes his move
     const gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_TWO);
     gameStatesToAnalyze.forEach((nextGameState, nextMoveSeq) => {
-      window.minimaxIterations = window.minimaxIterations + 1;
-
       const [maybeBetterValue] = minimax(
         nextGameState,
         PLAYER_ONE,
@@ -137,7 +135,6 @@ export function minimax(
     const gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_ONE);
 
     gameStatesToAnalyze.forEach((nextGameState, nextMoveSeq) => {
-      window.minimaxIterations = window.minimaxIterations + 1;
       const [maybeWorseValue] = minimax(
         nextGameState,
         PLAYER_TWO,
@@ -215,7 +212,7 @@ export function getWinner(gameState) {
     return getValidCaptures(fromCoordinate, gameState);
   });
 
-  if (!possibleCaptures.size) {
+  if (!possibleCaptures.find(possibleCapture => possibleCapture.size)) {
     return currentTurn === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
   }
 }
@@ -460,6 +457,12 @@ export function getPossibleMoveSequences(gameState, turn) {
                 nextGameState
               );
             });
+          } else {
+            // We can just capture, then pass
+            allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+              fromToKey,
+              stateAfterCapture
+            );
           }
         }
       });

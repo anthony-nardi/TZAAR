@@ -96,8 +96,7 @@ function handleDropPiece(event) {
   } else if (turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
     if (isValidCapture) {
       capturePiece(movingPiece, toCoordinates);
-    }
-    if (isValidStack) {
+    } else if (isValidStack) {
       stackPiece(movingPiece, toCoordinates);
     }
   }
@@ -135,6 +134,9 @@ function stackPiece(fromCoordinates, toCoordinates) {
   checkGameStateAndStartNextTurn();
 }
 
+window.getWinner = getWinner;
+window.gameBoardState = gameBoardState;
+
 function checkGameStateAndStartNextTurn() {
   nextPhase();
 
@@ -152,14 +154,35 @@ function moveAI() {
 
   const bestMove = getBestMove(gameBoardState, PLAYER_TWO);
 
-  if (!bestMove && turnPhase === TURN_PHASES.STACK_OR_CAPTURE) {
-    checkGameStateAndStartNextTurn();
-    return;
-  }
+  // Single move only
+  if (bestMove.indexOf("=>") === -1) {
+    const [firstFromCoordinate, firstToCoordinate] = firstMove.split("->");
+    const fromPiece = gameBoardState.get(firstFromCoordinate);
+    setNewgameBoardState(gameBoardState.set(firstFromCoordinate, false));
+    const fromFirstPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
+      firstFromCoordinate
+    );
+    const toFirstPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
+      firstToCoordinate
+    );
 
-  if (!bestMove || !bestMove.split) {
-    console.log(turnPhase);
-    debugger;
+    DEBUG &&
+      console.log(`MOVING FROM ${firstFromCoordinate} TO ${firstToCoordinate}`);
+    renderMovingPiece(
+      fromPiece,
+      fromFirstPixelCoodinate,
+      toFirstPixelCoordinate,
+      2000,
+      Date.now(),
+      () => {
+        setNewgameBoardState(gameBoardState.set(firstToCoordinate, fromPiece));
+
+        checkGameStateAndStartNextTurn();
+        checkGameStateAndStartNextTurn();
+        drawGameBoardState();
+      }
+    );
+    return;
   }
 
   const [firstMove, secondMove] = bestMove.split("=>");
