@@ -60,10 +60,11 @@ function handleClickPiece(event) {
 }
 
 function handleMovePiece(event) {
-  const [x, y] = getPixelCoordinatesFromUserInteraction(event);
   if (!movingPiece) {
     return;
   }
+
+  const [x, y] = getPixelCoordinatesFromUserInteraction(event);
   drawGameBoardState();
   drawGamePiece(gameBoardState.get(movingPiece), x, y);
 }
@@ -156,7 +157,7 @@ function moveAI() {
 
   // Single move only
   if (bestMove.indexOf("=>") === -1) {
-    const [firstFromCoordinate, firstToCoordinate] = firstMove.split("->");
+    const [firstFromCoordinate, firstToCoordinate] = bestMove.split("->");
     const fromPiece = gameBoardState.get(firstFromCoordinate);
     setNewgameBoardState(gameBoardState.set(firstFromCoordinate, false));
     const fromFirstPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
@@ -217,8 +218,8 @@ function moveAI() {
     Date.now(),
     () => {
       setNewgameBoardState(gameBoardState.set(firstToCoordinate, fromPiece));
-      checkGameStateAndStartNextTurn();
-      drawGameBoardState();
+
+      nextPhase();
 
       const secondFromPiece = gameBoardState.get(secondFromCoordinate);
       setNewgameBoardState(gameBoardState.set(secondFromCoordinate, false));
@@ -290,7 +291,9 @@ function getBestMove(gameState, turn) {
   DEBUG && console.time("get scores");
 
   // For every move AI makes, give minimax the state and let player one make its move...
-  const bestMove = minimax(gameState, PLAYER_TWO, depth)[1];
+  const minimaxResult = minimax(gameState, PLAYER_TWO, depth);
+
+  const bestMove = minimaxResult[1];
   DEBUG && console.timeEnd("get scores");
 
   document.getElementById("loadingSpinner").classList.add("hidden");

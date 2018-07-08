@@ -112,7 +112,7 @@ export function minimax(
         alpha,
         beta
       );
-      if (maybeBetterValue > bestValue) {
+      if (maybeBetterValue >= bestValue) {
         bestValue = maybeBetterValue;
         moveSeq = nextMoveSeq;
       }
@@ -143,7 +143,7 @@ export function minimax(
         beta
       );
 
-      if (maybeWorseValue < bestValue) {
+      if (maybeWorseValue <= bestValue) {
         bestValue = maybeWorseValue;
         moveSeq = nextMoveSeq;
       }
@@ -339,7 +339,6 @@ function getEarlyGamePossibleMoveSequences(gameState, PIECE_TYPE, turn) {
         }
         if (!allPlayerPiecesAfterCapture.size) {
           alert("This shouldnt be possible, let me know if you see this.");
-          debugger;
         }
 
         allPlayerPiecesAfterCapture.forEach(
@@ -440,31 +439,29 @@ export function getPossibleMoveSequences(gameState, turn) {
               gameStateAfterMoveSeq
             );
           });
-        } else {
-          const validSecondTurnCaptures = getValidCaptures(
-            playerPieceCoordinateAfterCapture,
-            stateAfterCapture
-          );
-          if (validSecondTurnCaptures && validSecondTurnCaptures.size) {
-            validSecondTurnCaptures.forEach(toCoordinate => {
-              const nextGameState = stateAfterCapture
-                .set(playerPieceCoordinateAfterCapture, null)
-                .set(toCoordinate, fromPiece);
-              const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
-
-              allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
-                sequenceKey,
-                nextGameState
-              );
-            });
-          } else {
-            // We can just capture, then pass
-            allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
-              fromToKey,
-              stateAfterCapture
-            );
-          }
         }
+        const validSecondTurnCaptures = getValidCaptures(
+          playerPieceCoordinateAfterCapture,
+          stateAfterCapture
+        );
+        if (validSecondTurnCaptures && validSecondTurnCaptures.size) {
+          validSecondTurnCaptures.forEach(toCoordinate => {
+            const nextGameState = stateAfterCapture
+              .set(playerPieceCoordinateAfterCapture, null)
+              .set(toCoordinate, fromPiece);
+            const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
+
+            allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+              sequenceKey,
+              nextGameState
+            );
+          });
+        }
+        // We can just capture, then pass
+        allGameStatesAfterMoveSeq = allGameStatesAfterMoveSeq.set(
+          fromToKey,
+          stateAfterCapture
+        );
       });
     });
 
