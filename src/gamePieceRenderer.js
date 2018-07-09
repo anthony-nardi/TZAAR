@@ -129,22 +129,26 @@ const playerTwoTzaar = new GamePieceRecord({
 const circleRadius = GAME_PIECE_RADIUS;
 const smallerCircleRadius = GAME_PIECE_RADIUS / 2;
 
+const CENTER_COLOR = "#FDD835";
+const PLAYER_ONE_COLOR_BG = "#1E88E5";
+const PLAYER_TWO_COLOR_BG = "#212121";
+
 function drawGamePiece(gamePiece, canvas) {
   const context = canvas.getContext("2d");
-  if (gamePiece.ownedBy === "PLAYER_ONE") {
-    context.fillStyle = "#212121";
+  if (gamePiece.ownedBy === PLAYER_ONE) {
+    context.fillStyle = PLAYER_ONE_COLOR_BG;
     context.beginPath();
     context.arc(circleRadius, circleRadius, circleRadius, 0, 2 * Math.PI);
     context.fill();
   } else {
-    context.fillStyle = "#0D47A1";
+    context.fillStyle = PLAYER_TWO_COLOR_BG;
     context.beginPath();
     context.arc(circleRadius, circleRadius, circleRadius, 0, 2 * Math.PI);
     context.fill();
   }
 
   if (gamePiece.type === TZAAR) {
-    context.fillStyle = "#FDD835";
+    context.fillStyle = CENTER_COLOR;
     context.beginPath();
     context.arc(
       circleRadius,
@@ -155,7 +159,7 @@ function drawGamePiece(gamePiece, canvas) {
     );
     context.fill();
   } else if (gamePiece.type === TZARRA) {
-    context.strokeStyle = "#FDD835";
+    context.strokeStyle = CENTER_COLOR;
     context.lineWidth = 3;
     context.beginPath();
     context.arc(

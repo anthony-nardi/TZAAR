@@ -169,7 +169,7 @@ export function setupBoardWithPiecesNotRandom() {
     "4,5": new GamePieceRecord({ type: TOTT, ownedBy: PLAYER_TWO }),
     "3,5": new GamePieceRecord({ type: TOTT, ownedBy: PLAYER_ONE }),
     "3,4": new GamePieceRecord({ type: TOTT, ownedBy: PLAYER_TWO })
-  });
+  }).sortBy(Math.random);
 
   return piecesToDraw;
 }
@@ -213,7 +213,7 @@ export function setupBoardWithPieces() {
     piecesToDraw = piecesToDraw.set(PLAYABLE_VERTICES[index], piece);
     // setNewgameBoardState(gameBoardState.set(PLAYABLE_VERTICES[index], piece));
   });
-  return piecesToDraw;
+  return piecesToDraw.sortBy(Math.random);
 }
 
 export function canCapture(fromCoordinate, toCoordinate, gameState) {

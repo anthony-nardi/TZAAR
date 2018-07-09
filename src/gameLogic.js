@@ -145,6 +145,7 @@ function checkGameStateAndStartNextTurn() {
   let message = winner === PLAYER_TWO ? "You lost." : "You won!";
   if (winner) {
     alert(`${message}`);
+    location.reload();
   }
 }
 
