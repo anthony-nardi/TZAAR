@@ -1,5 +1,13 @@
 import { List, Map } from "immutable";
-import { TZAAR, TOTT, TZARRA, PLAYER_ONE, PLAYER_TWO, CORNER_COORDINATES, EDGE_COORDINATES } from "./constants";
+import {
+  TZAAR,
+  TOTT,
+  TZARRA,
+  PLAYER_ONE,
+  PLAYER_TWO,
+  CORNER_COORDINATES,
+  EDGE_COORDINATES
+} from "./constants";
 
 import { currentTurn, numberOfTurnsIntoGame } from "./gameState";
 import {
@@ -15,21 +23,24 @@ const scoringMapRecord = Map({
       stacksGreaterThanOne: 0,
       largestStackSize: 0,
       stacksOnEdge: 0,
-      stacksOnCorner: 0
+      stacksOnCorner: 0,
+      coordinate: null
     }),
     [TZARRA]: Map({
       count: 0,
       stacksGreaterThanOne: 0,
       largestStackSize: 0,
       stacksOnEdge: 0,
-      stacksOnCorner: 0
+      stacksOnCorner: 0,
+      coordinate: null
     }),
     [TZAAR]: Map({
       count: 0,
       stacksGreaterThanOne: 0,
       largestStackSize: 0,
       stacksOnEdge: 0,
-      stacksOnCorner: 0
+      stacksOnCorner: 0,
+      coordinate: null
     })
   }),
   [PLAYER_TWO]: Map({
@@ -38,21 +49,24 @@ const scoringMapRecord = Map({
       stacksGreaterThanOne: 0,
       largestStackSize: 0,
       stacksOnEdge: 0,
-      stacksOnCorner: 0
+      stacksOnCorner: 0,
+      coordinate: null
     }),
     [TZARRA]: Map({
       count: 0,
       stacksGreaterThanOne: 0,
       largestStackSize: 0,
       stacksOnEdge: 0,
-      stacksOnCorner: 0
+      stacksOnCorner: 0,
+      coordinate: null
     }),
     [TZAAR]: Map({
       count: 0,
       stacksGreaterThanOne: 0,
       largestStackSize: 0,
       stacksOnEdge: 0,
-      stacksOnCorner: 0
+      stacksOnCorner: 0,
+      coordinate: null
     })
   })
 });
@@ -63,14 +77,14 @@ function getScoreForHighestStack(currentStack, stackToBeat) {
   }
 
   if (currentStack < stackToBeat) {
-    return -20
+    return -20;
   }
 
   return 0;
 }
 
 function getScoreForEdgesAndCorners(edges, corners) {
-  return edges * 5 + corners * 10
+  return edges * 5 + corners * 10;
 }
 
 export function getGameStateScore(gameState) {
@@ -86,46 +100,52 @@ export function getGameStateScore(gameState) {
         [ownedBy, type, "stacksGreaterThanOne"],
         stacks => stacks + Number(stackSize)
       )
-      .updateIn(
-        [ownedBy, type, 'largestStackSize'],
-        largestStackSize => Math.max(largestStackSize, Number(stackSize))
+      .updateIn([ownedBy, type, "largestStackSize"], largestStackSize =>
+        Math.max(largestStackSize, Number(stackSize))
       )
-      .updateIn(
-        [ownedBy, type, 'stacksOnEdge'],
-        stacksOnEdge => {
-          if (stackSize > 1 && EDGE_COORDINATES.includes(coordinate)) {
-            return stacksOnEdge + 1;
-          }
-          return stacksOnEdge
+      .updateIn([ownedBy, type, "stacksOnEdge"], stacksOnEdge => {
+        if (stackSize > 1 && EDGE_COORDINATES.includes(coordinate)) {
+          return stacksOnEdge + 1;
         }
-      )
-      .updateIn(
-        [ownedBy, type, 'stacksOnCorner'],
-        stacksOnCorner => {
-          if (stackSize > 1 && CORNER_COORDINATES.includes(coordinate)) {
-            return stacksOnCorner + 1;
-          }
-          return stacksOnCorner
+        return stacksOnEdge;
+      })
+      .updateIn([ownedBy, type, "stacksOnCorner"], stacksOnCorner => {
+        if (stackSize > 1 && CORNER_COORDINATES.includes(coordinate)) {
+          return stacksOnCorner + 1;
         }
-      )
+        return stacksOnCorner;
+      })
+      .setIn([ownedBy, type, "coordinate"], coordinate);
   }, scoringMapRecord);
 
   let score = 0;
-  
+
   scoringMap.get(PLAYER_ONE).forEach((data, pieceType) => {
     score =
       score -
       getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne")) -
-      getScoreForHighestStack(data.get('largestStackSize'), scoringMap.getIn([PLAYER_TWO, pieceType, 'largestStackSize'])) +
-      getScoreForEdgesAndCorners(data.get('stacksOnEdge'), data.get('stacksOnCorner'))
+      getScoreForHighestStack(
+        data.get("largestStackSize"),
+        scoringMap.getIn([PLAYER_TWO, pieceType, "largestStackSize"])
+      ) +
+      getScoreForEdgesAndCorners(
+        data.get("stacksOnEdge"),
+        data.get("stacksOnCorner")
+      );
   });
 
   scoringMap.get(PLAYER_TWO).forEach((data, pieceType) => {
     score =
       score +
       getScoreForStacks(data.get("count"), data.get("stacksGreaterThanOne")) +
-      getScoreForHighestStack(data.get('largestStackSize'), scoringMap.getIn([PLAYER_ONE, pieceType, 'largestStackSize'])) - 
-      getScoreForEdgesAndCorners(data.get('stacksOnEdge'), data.get('stacksOnCorner'))
+      getScoreForHighestStack(
+        data.get("largestStackSize"),
+        scoringMap.getIn([PLAYER_ONE, pieceType, "largestStackSize"])
+      ) -
+      getScoreForEdgesAndCorners(
+        data.get("stacksOnEdge"),
+        data.get("stacksOnCorner")
+      );
   });
 
   return score;
@@ -291,7 +311,7 @@ export function getGameStatesToAnalyze(gameState, turn) {
     ).concat(getEarlyGamePossibleMoveSequences(gameState, TZARRA, turn));
   }
 
-  if (!allPossibleStatesAfterTurn.size && EARLY_GAME) {
+  if (allPossibleStatesAfterTurn.size < 50 && EARLY_GAME) {
     allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
       gameState,
       TOTT,
