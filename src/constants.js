@@ -100,6 +100,9 @@ export const PLAYABLE_VERTICES = [
   "4,8"
 ];
 
+export const CORNER_COORDINATES = ["4,0", "8,0", "8,4", "4,8", "0,8", "0,4"];
+export const EDGE_COORDINATES = ['5,0','6,0','7,0','8,1', '8,2', '8,3', '7,5','6,6','5,7','3,8','2,8','1,8','0,7','0,6','0,5','1,3','2,2','3,1'];
+
 export const TZAAR = "TZAAR";
 export const TOTT = "TOTT";
 export const TZARRA = "TZARRA";
