@@ -7,6 +7,7 @@ export const CACHED_CANVAS = document.createElement("canvas");
 export const GAME_STATE_BOARD_CANVAS = document.getElementById(
   "gameStateBoardDiv"
 );
+export const HOME_PAGE_CANVAS = document.getElementById('homePageCanvas')
 export const PIXEL_RATIO = (function() {
   const ctx = CACHED_CANVAS.getContext("2d");
   const dpr = window.devicePixelRatio || 1;
@@ -24,7 +25,7 @@ export const PIXEL_RATIO = (function() {
 const windowInnerHeightDeviceRatio = window.innerHeight;
 const windowInnerWidthDeviceRatio = window.innerWidth;
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const NUMBER_OF_ROWS = 8;
 export const NUMBER_OF_COLS = 8;
 export const TRIANGLE_SIDE_LENGTH =

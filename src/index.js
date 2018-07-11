@@ -1,5 +1,5 @@
 import { initGame } from "./gameLogic";
-
+import {drawInitialGrid} from './homePageCanvas'
 function startNewGame() {
   document.documentElement.classList.add("hideOverflow");
   document.getElementById("gameMenuDiv").classList.add("hidden");
@@ -31,6 +31,7 @@ function showRules() {
 }
 
 function startApp() {
+  drawInitialGrid()
   document.getElementById("newGameDiv").addEventListener("click", startNewGame);
   document.getElementById("showRulesDiv").addEventListener("click", showRules);
   document
