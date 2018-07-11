@@ -138,12 +138,12 @@ function drawGamePiece(gamePiece, canvas) {
   if (gamePiece.ownedBy === PLAYER_ONE) {
     context.fillStyle = PLAYER_ONE_COLOR_BG;
     context.beginPath();
-    context.arc(circleRadius, circleRadius, circleRadius, 0, 2 * Math.PI);
+    context.arc(circleRadius, circleRadius, circleRadius - 2, 0, 2 * Math.PI);
     context.fill();
   } else {
     context.fillStyle = PLAYER_TWO_COLOR_BG;
     context.beginPath();
-    context.arc(circleRadius, circleRadius, circleRadius, 0, 2 * Math.PI);
+    context.arc(circleRadius, circleRadius, circleRadius - 2, 0, 2 * Math.PI);
     context.fill();
   }
 
@@ -153,7 +153,7 @@ function drawGamePiece(gamePiece, canvas) {
     context.arc(
       circleRadius,
       circleRadius,
-      smallerCircleRadius,
+      smallerCircleRadius * .8,
       0,
       2 * Math.PI
     );
