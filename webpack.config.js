@@ -12,5 +12,14 @@ module.exports = {
   devServer: {
     contentBase: path.join(__dirname, "dist"),
     port: 8000
+  },
+
+  module: {
+    rules: [
+      {
+        test: /\.worker\.js$/,
+        use: { loader: "worker-loader" }
+      }
+    ]
   }
 };

@@ -1,4 +1,5 @@
 import { List, Map } from "immutable";
+import Worker from "worker-loader!./worker.js";
 import {
   TZAAR,
   TOTT,
@@ -163,8 +164,18 @@ export function minimax(
   turn,
   depth,
   alpha = -Infinity,
-  beta = Infinity
+  beta = Infinity,
+  isFirstCall = false
 ) {
+  if (isFirstCall) {
+    for (let i = 0; i < window.navigator.hardwareConcurrency; i++) {
+      debugger;
+      var myWorker = new Worker();
+      myWorker.postMessage("hi");
+    }
+    return;
+  }
+
   const winner = getWinner(gameState);
   if (winner === PLAYER_ONE) {
     return [-Infinity];
