@@ -30,6 +30,7 @@ import {
   turnPhase
 } from "./gameState";
 import { getGameStatesToAnalyze, minimax, getWinner } from "./ai";
+import { fromJS } from "immutable";
 
 function getPixelCoordinatesFromUserInteraction(event) {
   const x = event.x || event.offsetX || event.changedTouches[0].clientX;
@@ -154,12 +155,49 @@ function moveAI() {
     return;
   }
 
-  const bestMove = getBestMove(gameBoardState, PLAYER_TWO);
+  getBestMove(gameBoardState, PLAYER_TWO).then(minmaxResult => {
+    const bestMove = minmaxResult.last();
+    // Single move only
+    if (bestMove.indexOf("=>") === -1) {
+      const [firstFromCoordinate, firstToCoordinate] = bestMove.split("->");
+      const fromPiece = gameBoardState.get(firstFromCoordinate);
+      setNewgameBoardState(gameBoardState.set(firstFromCoordinate, false));
+      const fromFirstPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
+        firstFromCoordinate
+      );
+      const toFirstPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
+        firstToCoordinate
+      );
 
-  // Single move only
-  if (bestMove.indexOf("=>") === -1) {
-    const [firstFromCoordinate, firstToCoordinate] = bestMove.split("->");
+      DEBUG &&
+        console.log(
+          `MOVING FROM ${firstFromCoordinate} TO ${firstToCoordinate}`
+        );
+      renderMovingPiece(
+        fromPiece,
+        fromFirstPixelCoodinate,
+        toFirstPixelCoordinate,
+        2000,
+        Date.now(),
+        () => {
+          setNewgameBoardState(
+            gameBoardState.set(firstToCoordinate, fromPiece)
+          );
+
+          checkGameStateAndStartNextTurn();
+          checkGameStateAndStartNextTurn();
+          drawGameBoardState();
+        }
+      );
+      return;
+    }
+
+    const [firstMove, secondMove] = bestMove.split("=>");
+    const [firstFromCoordinate, firstToCoordinate] = firstMove.split("->");
+    const [secondFromCoordinate, secondToCoordinate] = secondMove.split("->");
     const fromPiece = gameBoardState.get(firstFromCoordinate);
+
+    // dont render moving piece in the same spot...
     setNewgameBoardState(gameBoardState.set(firstFromCoordinate, false));
     const fromFirstPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
       firstFromCoordinate
@@ -168,8 +206,16 @@ function moveAI() {
       firstToCoordinate
     );
 
+    const fromSecondPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
+      secondFromCoordinate
+    );
+    const toSecondPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
+      secondToCoordinate
+    );
+
     DEBUG &&
       console.log(`MOVING FROM ${firstFromCoordinate} TO ${firstToCoordinate}`);
+
     renderMovingPiece(
       fromPiece,
       fromFirstPixelCoodinate,
@@ -179,87 +225,47 @@ function moveAI() {
       () => {
         setNewgameBoardState(gameBoardState.set(firstToCoordinate, fromPiece));
 
-        checkGameStateAndStartNextTurn();
-        checkGameStateAndStartNextTurn();
-        drawGameBoardState();
+        nextPhase();
+
+        const secondFromPiece = gameBoardState.get(secondFromCoordinate);
+        setNewgameBoardState(gameBoardState.set(secondFromCoordinate, false));
+
+        DEBUG &&
+          console.log(
+            `MOVING FROM ${secondFromCoordinate} TO ${secondToCoordinate}`
+          );
+
+        renderMovingPiece(
+          secondFromPiece,
+          fromSecondPixelCoodinate,
+          toSecondPixelCoordinate,
+          2000,
+          Date.now(),
+          () => {
+            const toPiece = gameBoardState.get(secondToCoordinate);
+
+            if (secondFromPiece.ownedBy === toPiece.ownedBy) {
+              setNewgameBoardState(
+                gameBoardState
+                  .set(secondToCoordinate, secondFromPiece)
+                  .setIn(
+                    [secondToCoordinate, "stackSize"],
+                    secondFromPiece.stackSize + toPiece.stackSize
+                  )
+              );
+            } else {
+              setNewgameBoardState(
+                gameBoardState.set(secondToCoordinate, secondFromPiece)
+              );
+            }
+
+            checkGameStateAndStartNextTurn();
+            drawGameBoardState();
+          }
+        );
       }
     );
-    return;
-  }
-
-  const [firstMove, secondMove] = bestMove.split("=>");
-  const [firstFromCoordinate, firstToCoordinate] = firstMove.split("->");
-  const [secondFromCoordinate, secondToCoordinate] = secondMove.split("->");
-  const fromPiece = gameBoardState.get(firstFromCoordinate);
-
-  // dont render moving piece in the same spot...
-  setNewgameBoardState(gameBoardState.set(firstFromCoordinate, false));
-  const fromFirstPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
-    firstFromCoordinate
-  );
-  const toFirstPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
-    firstToCoordinate
-  );
-
-  const fromSecondPixelCoodinate = getPixelCoordinatesFromBoardCoordinates(
-    secondFromCoordinate
-  );
-  const toSecondPixelCoordinate = getPixelCoordinatesFromBoardCoordinates(
-    secondToCoordinate
-  );
-
-  DEBUG &&
-    console.log(`MOVING FROM ${firstFromCoordinate} TO ${firstToCoordinate}`);
-
-  renderMovingPiece(
-    fromPiece,
-    fromFirstPixelCoodinate,
-    toFirstPixelCoordinate,
-    2000,
-    Date.now(),
-    () => {
-      setNewgameBoardState(gameBoardState.set(firstToCoordinate, fromPiece));
-
-      nextPhase();
-
-      const secondFromPiece = gameBoardState.get(secondFromCoordinate);
-      setNewgameBoardState(gameBoardState.set(secondFromCoordinate, false));
-
-      DEBUG &&
-        console.log(
-          `MOVING FROM ${secondFromCoordinate} TO ${secondToCoordinate}`
-        );
-
-      renderMovingPiece(
-        secondFromPiece,
-        fromSecondPixelCoodinate,
-        toSecondPixelCoordinate,
-        2000,
-        Date.now(),
-        () => {
-          const toPiece = gameBoardState.get(secondToCoordinate);
-
-          if (secondFromPiece.ownedBy === toPiece.ownedBy) {
-            setNewgameBoardState(
-              gameBoardState
-                .set(secondToCoordinate, secondFromPiece)
-                .setIn(
-                  [secondToCoordinate, "stackSize"],
-                  secondFromPiece.stackSize + toPiece.stackSize
-                )
-            );
-          } else {
-            setNewgameBoardState(
-              gameBoardState.set(secondToCoordinate, secondFromPiece)
-            );
-          }
-
-          checkGameStateAndStartNextTurn();
-          drawGameBoardState();
-        }
-      );
-    }
-  );
+  });
 }
 
 function getBestMove(gameState, turn) {
@@ -301,10 +307,16 @@ function getBestMove(gameState, turn) {
     true
   );
 
-  const bestMove = minimaxResult[1];
-  DEBUG && console.timeEnd("get scores");
+  const bestMove = minimaxResult.then(result => {
+    const moveToMake = fromJS(result)
+      .sortBy(res => res[0])
+      .last();
 
-  document.getElementById("loadingSpinner").classList.add("hidden");
+    document.getElementById("loadingSpinner").classList.add("hidden");
+    DEBUG && console.timeEnd("get scores");
+    return moveToMake;
+  });
+
   return bestMove;
 }
 
@@ -325,6 +337,9 @@ const mouseUpEvent = isMobile ? "touchend" : "mouseup";
 const mouseDownEvent = isMobile ? "touchstart" : "mousedown";
 const mouseMoveEvent = isMobile ? "touchmove" : "mousemove";
 
-GAME_STATE_BOARD_CANVAS.addEventListener(mouseDownEvent, handleClickPiece);
-GAME_STATE_BOARD_CANVAS.addEventListener(mouseMoveEvent, handleMovePiece);
-GAME_STATE_BOARD_CANVAS.addEventListener(mouseUpEvent, handleDropPiece);
+GAME_STATE_BOARD_CANVAS &&
+  GAME_STATE_BOARD_CANVAS.addEventListener(mouseDownEvent, handleClickPiece);
+GAME_STATE_BOARD_CANVAS &&
+  GAME_STATE_BOARD_CANVAS.addEventListener(mouseMoveEvent, handleMovePiece);
+GAME_STATE_BOARD_CANVAS &&
+  GAME_STATE_BOARD_CANVAS.addEventListener(mouseUpEvent, handleDropPiece);

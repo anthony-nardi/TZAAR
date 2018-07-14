@@ -1,15 +1,28 @@
 import { Record } from "immutable";
 
-const useWindowHeight = window.innerWidth > window.innerHeight;
+let useWindowHeight;
+let theWindow =
+  typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope
+    ? null
+    : window;
+
+if (theWindow) {
+  useWindowHeight = theWindow.innerWidth > theWindow.innerHeight;
+}
 const extraSpace = useWindowHeight ? 2.5 : 2;
 
-export const CACHED_CANVAS = document.createElement("canvas");
-export const GAME_STATE_BOARD_CANVAS = document.getElementById(
-  "gameStateBoardDiv"
-);
-export const PIXEL_RATIO = (function() {
-  const ctx = CACHED_CANVAS.getContext("2d");
-  const dpr = window.devicePixelRatio || 1;
+export const CACHED_CANVAS =
+  theWindow && theWindow.document.createElement("canvas");
+
+export const GAME_STATE_BOARD_CANVAS =
+  theWindow && theWindow.document.getElementById("gameStateBoardDiv");
+
+export const PIXEL_RATIO = (function(canvas) {
+  if (!canvas) {
+    return 1;
+  }
+  const ctx = canvas.getContext("2d");
+  const dpr = (theWindow && theWindow.devicePixelRatio) || 1;
   const bsr =
     ctx.webkitBackingStorePixelRatio ||
     ctx.mozBackingStorePixelRatio ||
@@ -19,10 +32,10 @@ export const PIXEL_RATIO = (function() {
     1;
 
   return dpr / bsr;
-})();
+})(CACHED_CANVAS);
 
-const windowInnerHeightDeviceRatio = window.innerHeight;
-const windowInnerWidthDeviceRatio = window.innerWidth;
+const windowInnerHeightDeviceRatio = theWindow && theWindow.innerHeight;
+const windowInnerWidthDeviceRatio = theWindow && theWindow.innerWidth;
 
 export const DEBUG = true;
 export const NUMBER_OF_ROWS = 8;

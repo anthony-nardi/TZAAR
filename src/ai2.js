@@ -1,5 +1,4 @@
 import { List, Map } from "immutable";
-import Worker from "worker-loader!./worker.js";
 import {
   TZAAR,
   TOTT,
@@ -93,8 +92,9 @@ export function getGameStateScore(gameState) {
     if (!piece) {
       return piecesByPlayer;
     }
-
-    const { ownedBy, type, stackSize } = piece;
+    const ownedBy = piece.get("ownedBy");
+    const type = piece.get("type");
+    const stackSize = piece.get("stackSize");
     return piecesByPlayer
       .updateIn([ownedBy, type, "count"], count => count + 1)
       .updateIn(
@@ -165,36 +165,10 @@ export function minimax(
   depth,
   alpha = -Infinity,
   beta = Infinity,
-  isFirstCall = false
+  isFirstCall = false,
+  workerId,
+  maxWorkers
 ) {
-  if (isFirstCall) {
-    return new Promise(function(resolve, reject) {
-      let minimaxResults = [];
-      const maxWorkers = window.navigator.hardwareConcurrency;
-
-      for (let workerId = 0; workerId < maxWorkers; workerId++) {
-        var myWorker = new Worker();
-        myWorker.postMessage(
-          JSON.stringify({
-            gameState: gameState.toJSON(),
-            turn,
-            depth,
-            alpha,
-            beta,
-            workerId,
-            maxWorkers
-          })
-        );
-        myWorker.onmessage = ({ data }) => {
-          minimaxResults.push(JSON.parse(data));
-          if (minimaxResults.length === window.navigator.hardwareConcurrency) {
-            resolve(minimaxResults);
-          }
-        };
-      }
-    });
-  }
-
   const winner = getWinner(gameState);
   if (winner === PLAYER_ONE) {
     return [-Infinity];
@@ -213,7 +187,20 @@ export function minimax(
     let moveSeq = null;
 
     // choose max score after player one makes his move
-    const gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_TWO);
+    let gameStatesToAnalyze = getGameStatesToAnalyze(gameState, PLAYER_TWO);
+
+    if (isFirstCall) {
+      const originalSize = gameStatesToAnalyze.size;
+      const start = Math.floor(
+        (workerId * gameStatesToAnalyze.size) / maxWorkers
+      );
+      const end = Math.ceil(
+        ((workerId + 1) * gameStatesToAnalyze.size) / maxWorkers
+      );
+      gameStatesToAnalyze = gameStatesToAnalyze.slice(start, end);
+      console.log(`SPLIITING UP WORK: ${originalSize} => ${start}, ${end}`);
+    }
+
     gameStatesToAnalyze.forEach((nextGameState, nextMoveSeq) => {
       const [maybeBetterValue] = minimax(
         nextGameState,
@@ -275,7 +262,9 @@ function getPieces(gameState) {
       if (!piece) {
         return piecesByPlayer;
       }
-      const { ownedBy, type } = piece;
+      const ownedBy = piece.get("ownedBy");
+      const type = piece.get("type");
+
       return piecesByPlayer.updateIn([ownedBy, type], pieces =>
         pieces.push(piece)
       );
@@ -353,12 +342,17 @@ export function getGameStatesToAnalyze(gameState, turn) {
 }
 
 export function getAllPlayerPieceCoordinates(gameState, player) {
-  return gameState.filter(piece => piece && piece.ownedBy === player).keySeq();
+  return gameState
+    .filter(piece => piece && piece.get("ownedBy") === player)
+    .keySeq();
 }
 
 export function getAllPlayerPieceCoordinatesByType(gameState, player, type) {
   return gameState
-    .filter(piece => piece && piece.ownedBy === player && piece.type === type)
+    .filter(
+      piece =>
+        piece && piece.get("ownedBy") === player && piece.get("type") === type
+    )
     .keySeq();
 }
 
@@ -469,7 +463,7 @@ function getEarlyGamePossibleMoveSequences(gameState, PIECE_TYPE, turn) {
                 .set(toCoordinate, fromPiece)
                 .setIn(
                   [toCoordinate, "stackSize"],
-                  fromPiece.stackSize + toPiece.stackSize
+                  fromPiece.get("stackSize") + toPiece.get("stackSize")
                 );
 
               const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;
@@ -539,7 +533,7 @@ export function getPossibleMoveSequences(gameState, turn) {
               .set(toCoordinate, fromPiece)
               .setIn(
                 [toCoordinate, "stackSize"],
-                fromPiece.stackSize + toPiece.stackSize
+                fromPiece.get("stackSize") + toPiece.get("stackSize")
               );
 
             const sequenceKey = `${fromToKey}=>${playerPieceCoordinateAfterCapture}->${toCoordinate}`;

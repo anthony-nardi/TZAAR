@@ -11,7 +11,7 @@ import {
   NUMBER_OF_TZAARS,
   PLAYER_TWO,
   PLAYER_ONE
-} from "./constants";
+} from "./constants2";
 import { List, Map } from "immutable";
 
 export function getPixelCoordinatesFromBoardCoordinates(coordinate) {
@@ -221,8 +221,8 @@ export function canCapture(fromCoordinate, toCoordinate, gameState) {
   const toPiece = gameState.get(toCoordinate);
 
   return (
-    fromPiece.get("ownedBy") !== toPiece.get("ownedBy") &&
-    fromPiece.get("stackSize") >= toPiece.get("stackSize")
+    fromPiece.ownedBy !== toPiece.ownedBy &&
+    fromPiece.stackSize >= toPiece.stackSize
   );
 }
 
@@ -230,7 +230,7 @@ export function canStack(fromCoordinate, toCoordinate, gameState) {
   const fromPiece = gameState.get(fromCoordinate);
   const toPiece = gameState.get(toCoordinate);
 
-  return fromPiece.get("ownedBy") === toPiece.get("ownedBy");
+  return fromPiece.ownedBy === toPiece.ownedBy;
 }
 
 export function isValidEmptyCoordinate(coordinate, gameState) {
