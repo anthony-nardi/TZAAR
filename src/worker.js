@@ -14,7 +14,7 @@ self.addEventListener("message", event => {
     maxWorkers
   } = JSON.parse(event.data);
   const immutableGameState = fromJS(gameState);
-
+  const startTime = Date.now();
   const minimaxResult = minimax(
     immutableGameState,
     turn,
@@ -25,6 +25,6 @@ self.addEventListener("message", event => {
     workerId,
     maxWorkers
   );
-  console.log(minimaxResult);
+  console.log(Date.now() - startTime);
   self.postMessage(JSON.stringify(minimaxResult));
 });

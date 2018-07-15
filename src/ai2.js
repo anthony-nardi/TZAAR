@@ -169,6 +169,7 @@ export function minimax(
   workerId,
   maxWorkers
 ) {
+  console.log(isFirstCall);
   const winner = getWinner(gameState);
   if (winner === PLAYER_ONE) {
     return [-Infinity];
@@ -200,8 +201,9 @@ export function minimax(
       gameStatesToAnalyze = gameStatesToAnalyze.slice(start, end);
       console.log(`SPLIITING UP WORK: ${originalSize} => ${start}, ${end}`);
     }
-
+    debugger;
     gameStatesToAnalyze.forEach((nextGameState, nextMoveSeq) => {
+      console.log(`checking game state ${nextMoveSeq}`);
       const [maybeBetterValue] = minimax(
         nextGameState,
         PLAYER_ONE,
@@ -216,9 +218,9 @@ export function minimax(
 
       alpha = Math.max(bestValue, alpha);
 
-      if (alpha >= beta) {
-        return false;
-      }
+      // if (alpha >= beta) {
+      //   return false;
+      // }
     });
 
     return [bestValue, moveSeq];
@@ -247,9 +249,9 @@ export function minimax(
 
       beta = Math.min(beta, bestValue);
 
-      if (alpha >= beta) {
-        return false;
-      }
+      // if (alpha >= beta) {
+      //   return false;
+      // }
     });
 
     return [bestValue, moveSeq];
