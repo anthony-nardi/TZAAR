@@ -9,18 +9,18 @@ self.addEventListener("message", event => {
     depth,
     alpha,
     beta,
-
     workerId,
     maxWorkers
   } = JSON.parse(event.data);
+
   const immutableGameState = fromJS(gameState);
   const startTime = Date.now();
   const minimaxResult = minimax(
     immutableGameState,
     turn,
     depth,
-    alpha,
-    beta,
+    undefined,
+    undefined,
     true,
     workerId,
     maxWorkers

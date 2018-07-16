@@ -273,18 +273,18 @@ function getBestMove(gameState, turn) {
 
   const allPossibleStatesAfterTurn = getGameStatesToAnalyze(gameState, turn);
 
-  let depth = 2;
+  let depth = 1;
 
   if (allPossibleStatesAfterTurn.size < 500) {
-    depth = 5;
+    depth = 2;
   }
 
   if (allPossibleStatesAfterTurn.size < 150) {
-    depth = 4;
+    depth = 3;
   }
 
   if (allPossibleStatesAfterTurn.size < 20) {
-    depth = 5;
+    depth = 4;
   }
 
   DEBUG && console.timeEnd("all game states");

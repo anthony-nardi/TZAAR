@@ -170,7 +170,7 @@ export function minimax(
   if (isFirstCall) {
     return new Promise(function(resolve, reject) {
       let minimaxResults = [];
-      const maxWorkers = 1 || window.navigator.hardwareConcurrency;
+      const maxWorkers = window.navigator.hardwareConcurrency;
 
       for (let workerId = 0; workerId < maxWorkers; workerId++) {
         var myWorker = new Worker();
