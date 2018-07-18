@@ -308,15 +308,9 @@ export function getGameStatesToAnalyze(gameState, turn) {
       gameState,
       TZAAR,
       turn
-    ).concat(getEarlyGamePossibleMoveSequences(gameState, TZARRA, turn));
-  }
-
-  if (allPossibleStatesAfterTurn.size < 50 && EARLY_GAME) {
-    allPossibleStatesAfterTurn = getEarlyGamePossibleMoveSequences(
-      gameState,
-      TOTT,
-      turn
-    );
+    )
+      .concat(getEarlyGamePossibleMoveSequences(gameState, TZARRA, turn))
+      .concat(getEarlyGamePossibleMoveSequences(gameState, TOTT, turn));
   }
 
   return allPossibleStatesAfterTurn;

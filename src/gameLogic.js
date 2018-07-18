@@ -291,7 +291,6 @@ function getBestMove(gameState, turn) {
 
   DEBUG && console.time("get scores");
 
-  // For every move AI makes, give minimax the state and let player one make its move...
   const minimaxResult = minimax(gameState, PLAYER_TWO, depth);
 
   const bestMove = minimaxResult[1];
