@@ -1,13 +1,13 @@
 import { Record } from "immutable";
 
 const useWindowHeight = window.innerWidth > window.innerHeight;
-const extraSpace = useWindowHeight ? 2.5 : 2;
+const extraSpace = 1;
 
 export const CACHED_CANVAS = document.createElement("canvas");
 export const GAME_STATE_BOARD_CANVAS = document.getElementById(
   "gameStateBoardDiv"
 );
-export const PIXEL_RATIO = (function() {
+export const PIXEL_RATIO = (function () {
   const ctx = CACHED_CANVAS.getContext("2d");
   const dpr = window.devicePixelRatio || 1;
   const bsr =

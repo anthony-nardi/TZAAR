@@ -9,6 +9,8 @@ import {
   GamePieceRecord
 } from "./constants";
 
+const isMobile = "ontouchstart" in document.documentElement;
+
 export const PLAYER_ONE_TOTT = document.createElement("canvas");
 export const PLAYER_ONE_TZARRA = document.createElement("canvas");
 export const PLAYER_ONE_TZAAR = document.createElement("canvas");
@@ -16,7 +18,7 @@ export const PLAYER_TWO_TOTT = document.createElement("canvas");
 export const PLAYER_TWO_TZARRA = document.createElement("canvas");
 export const PLAYER_TWO_TZAAR = document.createElement("canvas");
 
-export const GAME_PIECE_RADIUS = TRIANGLE_HEIGHT / 2.5;
+export const GAME_PIECE_RADIUS = isMobile ? TRIANGLE_HEIGHT / 1.75 : TRIANGLE_HEIGHT / 2.5;
 export const CANVAS_SIDE_LENGTH = GAME_PIECE_RADIUS * PIXEL_RATIO * 2;
 const CANVAS_STYLE_LENGTH = `${GAME_PIECE_RADIUS * 2}px`;
 
