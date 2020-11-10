@@ -26,8 +26,10 @@ function backToGameMenu() {
 }
 
 function showRules() {
-  document.getElementById("gameMenuDiv").classList.add("hidden");
-  document.getElementById("rulesDiv").classList.remove("hidden");
+  var link = document.createElement('a');
+  link.href = 'tzaar_rulebook.pdf';
+  link.download = 'tzaar_rulebook.pdf';
+  link.dispatchEvent(new MouseEvent('click'));
 }
 
 function startApp() {
