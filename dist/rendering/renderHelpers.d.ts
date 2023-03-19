@@ -1,0 +1,10 @@
+import { ValidCoordinate } from "../types/types";
+export declare function drawCoordinates(): void;
+export declare function drawCoordinate(coordinate: ValidCoordinate): void;
+export declare function drawGameBoardState(): void;
+export declare function drawStaticGamePiece(gamePiece: any, coordinate: ValidCoordinate): void;
+export declare function drawGamePiece(gamePiece: any, xPos: number, yPos: number): void;
+export declare function drawGamePieces(): void;
+export declare function clearCanvas(): void;
+export declare function renderInitializingBoard(piecesToDraw: any, callback: Function): void;
+export declare function renderMovingPiece(piece: any, from: string, to: string, duration: number, startTime: number, callback: Function): void;
